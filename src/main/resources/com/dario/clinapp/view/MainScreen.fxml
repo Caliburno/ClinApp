@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.BorderPane?>
+
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+   <top>
+      <ToolBar BorderPane.alignment="CENTER">
+        <items>
+          <Button mnemonicParsing="false" text="Registro de Pacientes" />
+            <Button mnemonicParsing="false" text="Sesiones" />
+            <Button mnemonicParsing="false" text="Pagos" />
+            <Button mnemonicParsing="false" text="Informes" />
+            <Button mnemonicParsing="false" text="Contabilidad" />
+        </items>
+      </ToolBar>
+   </top>
+</BorderPane>
