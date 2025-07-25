@@ -13,7 +13,7 @@ public class MainScreenController {
     private BorderPane mainBorderPane;
 
     public void initialize() {
-    showSesiones();
+        showPacientes();
     }
 
     private void loadCenter(String fxmlPath) {
@@ -29,6 +29,21 @@ public class MainScreenController {
     @FXML
     private void showSesiones(){
         loadCenter("/com/dario/clinapp/view/Sesiones.fxml");
+    }
+
+    @FXML
+    private void showPacientes(){
+        loadCenter("/com/dario/clinapp/view/Pacientes.fxml");
+    }
+
+    @FXML
+    private void showPagos(){
+        loadCenter("/com/dario/clinapp/view/Pagos.fxml");
+    }
+
+    @FXML
+    private void showInformes(){
+        loadCenter("/com/dario/clinapp/view/Informes.fxml");
     }
 
 }

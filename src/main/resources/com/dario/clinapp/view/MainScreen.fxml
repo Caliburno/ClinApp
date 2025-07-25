@@ -4,15 +4,14 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.BorderPane?>
 
-
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane fx:id="mainBorderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.dario.clinapp.controller.MainScreenController">
    <top>
       <ToolBar BorderPane.alignment="CENTER">
         <items>
-          <Button mnemonicParsing="false" text="Registro de Pacientes" />
-            <Button mnemonicParsing="false" text="Sesiones" />
-            <Button mnemonicParsing="false" text="Pagos" />
-            <Button mnemonicParsing="false" text="Informes" />
+          <Button mnemonicParsing="false" onAction="#showPacientes" text="Registro de Pacientes" />
+            <Button mnemonicParsing="false" onAction="#showSesiones" text="Sesiones" />
+            <Button mnemonicParsing="false" onAction="#showPagos" text="Pagos" />
+            <Button mnemonicParsing="false" onAction="#showInformes" text="Informes" />
             <Button mnemonicParsing="false" text="Contabilidad" />
         </items>
       </ToolBar>
