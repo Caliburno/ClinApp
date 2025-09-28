@@ -1,69 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ChoiceBox?>
-<?import javafx.scene.control.DatePicker?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane fx:id="showSesiones" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1">
-   <children>
-      <VBox alignment="TOP_CENTER">
-         <children>
-            <HBox alignment="TOP_CENTER" prefHeight="100.0" prefWidth="600.0" spacing="10.0">
-               <children>
-                  <VBox spacing="5.0">
-                     <children>
-                        <Label text="Paciente" />
-                        <ChoiceBox prefWidth="150.0" />
-                     </children>
-                  </VBox>
-                  <VBox spacing="5.0">
-                     <children>
-                        <Label text="Fecha" />
-                        <DatePicker />
-                     </children>
-                  </VBox>
-                  <TextField>
-                     <HBox.margin>
-                        <Insets top="15.0" />
-                     </HBox.margin>
-                  </TextField>
-                  <VBox prefWidth="150.0" spacing="5.0">
-                     <children>
-                        <Label text="Paga" />
-                        <CheckBox mnemonicParsing="false" text="CheckBox" />
-                     </children>
-                  </VBox>
-                  <TextField>
-                     <HBox.margin>
-                        <Insets top="15.0" />
-                     </HBox.margin>
-                  </TextField>
-               </children>
-               <VBox.margin>
-                  <Insets left="10.0" right="10.0" top="10.0" />
-               </VBox.margin>
-            </HBox>
-            <TableView>
-              <columns>
-                <TableColumn prefWidth="75.0" text="Paciente" />
-                <TableColumn prefWidth="75.0" text="Fecha" />
-                  <TableColumn prefWidth="75.0" text="Precio" />
-                  <TableColumn prefWidth="75.0" text="Paga" />
-                  <TableColumn prefWidth="75.0" text="Notas" />
-              </columns>
-               <VBox.margin>
-                  <Insets left="10.0" right="10.0" />
-               </VBox.margin>
-            </TableView>
-         </children>
-      </VBox>
-   </children>
+<StackPane fx:id="showSesiones" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.dario.clinapp.controller.SesionesController">
+    <children>
+        <VBox alignment="TOP_CENTER">
+            <children>
+                <HBox alignment="TOP_CENTER" prefHeight="100.0" prefWidth="600.0" spacing="10.0">
+                    <children>
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Paciente" />
+                                <ComboBox fx:id="cmbPaciente" prefWidth="150.0" />
+                            </children>
+                        </VBox>
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Fecha" />
+                                <DatePicker fx:id="dateFecha" />
+                            </children>
+                        </VBox>
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Tipo Sesión" />
+                                <ComboBox fx:id="cmbTipoSesion" prefWidth="120.0" />
+                            </children>
+                        </VBox>
+                        <VBox prefWidth="100.0" spacing="5.0">
+                            <children>
+                                <Label text="Paga" />
+                                <CheckBox fx:id="chkPaga" mnemonicParsing="false" text="Sesión Paga" />
+                            </children>
+                        </VBox>
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Notas" />
+                                <TextField fx:id="txtNotas" prefWidth="150.0" />
+                            </children>
+                        </VBox>
+                    </children>
+                    <VBox.margin>
+                        <Insets left="10.0" right="10.0" top="10.0" />
+                    </VBox.margin>
+                </HBox>
+                <HBox spacing="10.0" alignment="CENTER">
+                    <children>
+                        <Button fx:id="btnAgregar" text="Agregar Sesión" onAction="#agregarSesion" />
+                        <Button fx:id="btnEditar" text="Editar" onAction="#editarSesion" />
+                        <Button fx:id="btnEliminar" text="Eliminar" onAction="#eliminarSesion" />
+                        <Button fx:id="btnLimpiar" text="Limpiar" onAction="#limpiarFormulario" />
+                    </children>
+                    <VBox.margin>
+                        <Insets bottom="10.0" />
+                    </VBox.margin>
+                </HBox>
+                <TableView fx:id="tablaSesiones">
+                    <columns>
+                        <TableColumn fx:id="colPaciente" prefWidth="150.0" text="Paciente" />
+                        <TableColumn fx:id="colFecha" prefWidth="100.0" text="Fecha" />
+                        <TableColumn fx:id="colTipoSesion" prefWidth="100.0" text="Tipo Sesión" />
+                        <TableColumn fx:id="colPrecio" prefWidth="80.0" text="Precio" />
+                        <TableColumn fx:id="colPaga" prefWidth="75.0" text="Paga" />
+                        <TableColumn fx:id="colNotas" prefWidth="150.0" text="Notas" />
+                    </columns>
+                    <VBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                    </VBox.margin>
+                </TableView>
+            </children>
+        </VBox>
+    </children>
 </StackPane>
