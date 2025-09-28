@@ -1,4 +1,5 @@
 package com.dario.clinapp.model;
 
-public class FormaDePago {
+public enum FormaDePago {
+    EFECTIVO, DEPOSITO, TRANSFERENCIA, MERCADO_PAGO, TARJETA_CREDITO, TARJETA_DEBITO
 }

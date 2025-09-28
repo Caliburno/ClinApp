@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public class Pago {
 
+    private Long id;
     private Paciente paciente;
     private TipoPago tipoPago;
     private double monto;
@@ -14,7 +15,8 @@ public class Pago {
     @Override
     public String toString() {
         return "Pago{" +
-                "paciente=" + paciente +
+                "id=" + id +
+                ", paciente=" + paciente +
                 ", tipoPago=" + tipoPago +
                 ", monto=" + monto +
                 ", formaDePago=" + formaDePago +
@@ -23,13 +25,22 @@ public class Pago {
                 '}';
     }
 
-    public Pago(Paciente paciente, TipoPago tipoPago, double monto, FormaDePago formaDePago, LocalDate fecha, String notas) {
+    public Pago(Long id, Paciente paciente, TipoPago tipoPago, double monto, FormaDePago formaDePago, LocalDate fecha, String notas) {
+        this.id = id;
         this.paciente = paciente;
         this.tipoPago = tipoPago;
         this.monto = monto;
         this.formaDePago = formaDePago;
         this.fecha = fecha;
         this.notas = notas;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Paciente getPaciente() {

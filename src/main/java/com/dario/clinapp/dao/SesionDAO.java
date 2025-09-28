@@ -1,4 +1,4 @@
 package com.dario.clinapp.dao;
 
-public class Persistence {
+public class SesionDAO {
 }

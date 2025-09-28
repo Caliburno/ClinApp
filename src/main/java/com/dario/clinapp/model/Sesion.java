@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public class Sesion {
 
+    private Long id;
     private TipoSesion tipoSesion;
     private Paciente paciente;
     private LocalDate fecha;
@@ -13,7 +14,8 @@ public class Sesion {
     @Override
     public String toString() {
         return "Sesion{" +
-                "tipoSesion=" + tipoSesion +
+                "id= " + id +
+                ", tipoSesion=" + tipoSesion +
                 ", paciente=" + paciente +
                 ", fecha=" + fecha +
                 ", estadoPagoSesion=" + estadoPagoSesion +
@@ -21,12 +23,21 @@ public class Sesion {
                 '}';
     }
 
-    public Sesion(TipoSesion tipoSesion, Paciente paciente, LocalDate fecha, EstadoPagoSesion estadoPagoSesion, String notas) {
+    public Sesion(Long id, TipoSesion tipoSesion, Paciente paciente, LocalDate fecha, EstadoPagoSesion estadoPagoSesion, String notas) {
+        this.id = id;
         this.tipoSesion = tipoSesion;
         this.paciente = paciente;
         this.fecha = fecha;
         this.estadoPagoSesion = estadoPagoSesion;
         this.notas = notas;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public TipoSesion getTipoSesion() {

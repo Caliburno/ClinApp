@@ -2,6 +2,7 @@ package com.dario.clinapp.model;
 
 public class Paciente {
 
+    private Long id;
     private String nombre;
     private TipoPaciente tipoPaciente;
     private TipoSesion tipoSesion;
@@ -12,7 +13,8 @@ public class Paciente {
     @Override
     public String toString() {
         return "Paciente{" +
-                "nombre='" + nombre + '\'' +
+                "id=" + id +
+                ", nombre='" + nombre + '\'' +
                 ", tipoPaciente=" + tipoPaciente +
                 ", tipoSesion=" + tipoSesion +
                 ", precioPorSesion=" + precioPorSesion +
@@ -21,13 +23,22 @@ public class Paciente {
                 '}';
     }
 
-    public Paciente(String nombre, TipoPaciente tipoPaciente, TipoSesion tipoSesion, double precioPorSesion, double deuda, String notas) {
+    public Paciente(Long id, String nombre, TipoPaciente tipoPaciente, TipoSesion tipoSesion, double precioPorSesion, double deuda, String notas) {
+        this.id = id;
         this.nombre = nombre;
         this.tipoPaciente = tipoPaciente;
         this.tipoSesion = tipoSesion;
         this.precioPorSesion = precioPorSesion;
         this.deuda = deuda;
         this.notas = notas;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getNombre() {
