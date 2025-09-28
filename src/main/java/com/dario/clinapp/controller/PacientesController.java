@@ -45,7 +45,19 @@ public class PacientesController {
         // Configurar botones inicialmente
         btnEditar.setDisable(true);
         btnBorrar.setDisable(true);
+
+        cmbTipoPaciente.setOnAction(e -> actualizarEtiquetaPrecio());
     }
+
+    private void actualizarEtiquetaPrecio() {
+        if (cmbTipoPaciente.getValue() == TipoPaciente.DIAGNOSTICO) {
+            // Cambiar placeholder del campo precio
+            txtValorSesion.setPromptText("Monto Total Diagnóstico");
+        } else {
+            txtValorSesion.setPromptText("Precio por Sesión");
+        }
+    }
+
 
     private void configurarTabla() {
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
@@ -95,6 +107,14 @@ public class PacientesController {
             );
 
             ServiceManager.getPacienteDAO().save(nuevo);
+
+            if (nuevo.esDiagnostico()) {
+                // Para diagnósticos, el monto total se agrega directamente a la deuda
+                double montoTotal = nuevo.getPrecioPorSesion(); // Usamos este campo para el total
+                nuevo.setDeuda(nuevo.getDeuda() + montoTotal);
+                ServiceManager.getPacienteDAO().updateDeuda(nuevo.getId(), nuevo.getDeuda());
+            }
+
             mostrarMensaje("Paciente creado exitosamente", Alert.AlertType.INFORMATION);
 
             cargarPacientes();

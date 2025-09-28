@@ -8,8 +8,10 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
+import java.util.List;
 
 import java.time.LocalDate;
+import java.util.stream.Collectors;
 
 public class PagosController {
 
@@ -124,11 +126,14 @@ public class PagosController {
                 return;
             }
 
+            double montoPago = Double.parseDouble(txtMonto.getText());
+            Paciente paciente = cmbPaciente.getValue();
+
             Pago nuevoPago = new Pago(
-                    null, // ID null para nuevo pago
-                    cmbPaciente.getValue(),
+                    null,
+                    paciente,
                     cmbTipoPago.getValue(),
-                    Double.parseDouble(txtMonto.getText()),
+                    montoPago,
                     cmbFormaPago.getValue(),
                     dateFecha.getValue(),
                     txtNotas.getText().trim()
@@ -136,8 +141,15 @@ public class PagosController {
 
             ServiceManager.getPagoDAO().save(nuevoPago);
 
+            TipoPago tipoPago = cmbTipoPago.getValue();
+
+            if (tipoPago == TipoPago.SESION) {
+                // Si es pago de sesión, marcar sesiones como pagas
+                marcarSesionesComoPagas(paciente, montoPago);
+            }
+
             // Actualizar deuda del paciente (restarle lo que pagó)
-            actualizarDeudaPaciente(cmbPaciente.getValue(), -Double.parseDouble(txtMonto.getText()));
+            actualizarDeudaPaciente(paciente, -montoPago);
 
             mostrarMensaje("Pago registrado exitosamente", Alert.AlertType.INFORMATION);
 
@@ -149,6 +161,35 @@ public class PagosController {
             mostrarMensaje("Por favor ingrese un monto válido", Alert.AlertType.ERROR);
         } catch (Exception e) {
             mostrarMensaje("Error al registrar pago: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    private void marcarSesionesComoPagas(Paciente paciente, double montoPago) {
+        try {
+            // Obtener sesiones pendientes del paciente
+            List<Sesion> sesionesPendientes = ServiceManager.getSesionDAO()
+                    .findByPacienteId(paciente.getId())
+                    .stream()
+                    .filter(s -> s.getEstadoPagoSesion() == EstadoPagoSesion.PENDIENTE)
+                    .sorted((s1, s2) -> s1.getFecha().compareTo(s2.getFecha())) // Más antiguas primero
+                    .collect(Collectors.toList());
+
+            double montoRestante = montoPago;
+            double precioPorSesion = paciente.getPrecioPorSesion();
+
+            for (Sesion sesion : sesionesPendientes) {
+                if (montoRestante >= precioPorSesion) {
+                    // Marcar sesión como paga
+                    sesion.setEstadoPagoSesion(EstadoPagoSesion.PAGA);
+                    ServiceManager.getSesionDAO().update(sesion);
+                    montoRestante -= precioPorSesion;
+
+                    if (montoRestante <= 0) break;
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error marcando sesiones como pagas: " + e.getMessage());
         }
     }
 

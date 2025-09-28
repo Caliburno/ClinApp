@@ -131,13 +131,30 @@ public class SesionesController {
             );
 
             ServiceManager.getSesionDAO().save(nuevaSesion);
+
+            if (estadoPago == EstadoPagoSesion.PENDIENTE) {
+                double montoSesion = cmbPaciente.getValue().getPrecioPorSesion();
+                actualizarDeudaPaciente(cmbPaciente.getValue(), montoSesion);
+            }
+
             mostrarMensaje("Sesión registrada exitosamente", Alert.AlertType.INFORMATION);
 
             cargarSesiones();
+            cargarPacientes();
             limpiarFormulario();
 
         } catch (Exception e) {
             mostrarMensaje("Error al registrar sesión: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    private void actualizarDeudaPaciente(Paciente paciente, double cambio) {
+        try {
+            double nuevaDeuda = paciente.getDeuda() + cambio;
+            paciente.setDeuda(nuevaDeuda);
+            ServiceManager.getPacienteDAO().updateDeuda(paciente.getId(), nuevaDeuda);
+        } catch (Exception e) {
+            mostrarMensaje("Error al actualizar deuda del paciente: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
