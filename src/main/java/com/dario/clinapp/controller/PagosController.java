@@ -81,6 +81,7 @@ public class PagosController {
 
         // Configurar ComboBox de Formas de Pago
         cmbFormaPago.setItems(FXCollections.observableArrayList(FormaDePago.values()));
+        cmbFormaPago.setValue(FormaDePago.TRANSFERENCIA);
 
         // Configurar ComboBox de Pacientes
         cmbPaciente.setItems(listaPacientes);
@@ -268,7 +269,7 @@ public class PagosController {
     private void limpiarFormulario() {
         cmbPaciente.setValue(null);
         cmbTipoPago.setValue(null);
-        cmbFormaPago.setValue(null);
+        cmbFormaPago.setValue(FormaDePago.TRANSFERENCIA);
         txtMonto.clear();
         dateFecha.setValue(LocalDate.now());
         txtNotas.clear();
