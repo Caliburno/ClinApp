@@ -10,7 +10,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 public class PacientesController {
 
-    // Controles del formulario
     @FXML private TextField txtNombre;
     @FXML private ComboBox<TipoPaciente> cmbTipoPaciente;
     @FXML private ComboBox<TipoSesion> cmbTipoSesion;
@@ -18,12 +17,10 @@ public class PacientesController {
     @FXML private TextField txtDeuda;
     @FXML private TextField txtNotas;
 
-    // Botones
     @FXML private Button btnAgregar;
     @FXML private Button btnEditar;
     @FXML private Button btnBorrar;
 
-    // Tabla y columnas
     @FXML private TableView<Paciente> tablaPacientes;
     @FXML private TableColumn<Paciente, String> colNombre;
     @FXML private TableColumn<Paciente, TipoPaciente> colFrecuencia;
@@ -32,7 +29,6 @@ public class PacientesController {
     @FXML private TableColumn<Paciente, Double> colDeuda;
     @FXML private TableColumn<Paciente, String> colNotas;
 
-    // AQUÍ ESTABA EL ERROR - Variables de clase
     private ObservableList<Paciente> listaPacientes = FXCollections.observableArrayList();
     private Paciente pacienteSeleccionado = null;
 
@@ -41,23 +37,61 @@ public class PacientesController {
         configurarComboBoxes();
         cargarPacientes();
         configurarSeleccionTabla();
+        configurarListeners();
 
-        // Configurar botones inicialmente
         btnEditar.setDisable(true);
         btnBorrar.setDisable(true);
 
-        cmbTipoPaciente.setOnAction(e -> actualizarEtiquetaPrecio());
+        // Set default values
+        txtDeuda.setText("0");
+        txtDeuda.setDisable(true); // Disabled by default
     }
 
-    private void actualizarEtiquetaPrecio() {
-        if (cmbTipoPaciente.getValue() == TipoPaciente.DIAGNOSTICO) {
-            // Cambiar placeholder del campo precio
-            txtValorSesion.setPromptText("Monto Total Diagnóstico");
-        } else {
-            txtValorSesion.setPromptText("Precio por Sesión");
+    private void configurarListeners() {
+        // Listener for TipoPaciente changes
+        cmbTipoPaciente.setOnAction(e -> {
+            TipoPaciente tipoPaciente = cmbTipoPaciente.getValue();
+            if (tipoPaciente != null) {
+                if (tipoPaciente == TipoPaciente.DIAGNOSTICO) {
+                    // Set TipoSesion to DIAGNOSTICO and disable
+                    cmbTipoSesion.setValue(TipoSesion.DIAGNOSTICO);
+                    cmbTipoSesion.setDisable(true);
+                    txtValorSesion.setPromptText("Precio Total Diagnóstico");
+                    txtDeuda.setDisable(true);
+                    // Update debt field to show diagnosis price
+                    actualizarDeudaDiagnostico();
+                } else {
+                    // Enable TipoSesion and set default to ESTANDAR
+                    cmbTipoSesion.setDisable(false);
+                    if (cmbTipoSesion.getValue() == null) {
+                        cmbTipoSesion.setValue(TipoSesion.ESTANDAR);
+                    }
+                    txtValorSesion.setPromptText("Precio por Sesión");
+                    txtDeuda.setDisable(false);
+                }
+            }
+        });
+
+        // Listener for price changes when Diagnostico is selected
+        txtValorSesion.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (cmbTipoPaciente.getValue() == TipoPaciente.DIAGNOSTICO) {
+                actualizarDeudaDiagnostico();
+            }
+        });
+    }
+
+    private void actualizarDeudaDiagnostico() {
+        try {
+            if (!txtValorSesion.getText().trim().isEmpty()) {
+                double precioDiagnostico = Double.parseDouble(txtValorSesion.getText());
+                txtDeuda.setText(String.valueOf(precioDiagnostico));
+            } else {
+                txtDeuda.setText("0");
+            }
+        } catch (NumberFormatException e) {
+            txtDeuda.setText("0");
         }
     }
-
 
     private void configurarTabla() {
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
@@ -96,32 +130,33 @@ public class PacientesController {
                 return;
             }
 
+            double deuda = 0;
+            if (cmbTipoPaciente.getValue() == TipoPaciente.DIAGNOSTICO) {
+                // For diagnosis patients, debt is the total diagnosis price
+                deuda = Double.parseDouble(txtValorSesion.getText());
+            } else {
+                // For other patients, use the debt field value
+                deuda = Double.parseDouble(txtDeuda.getText());
+            }
+
             Paciente nuevo = new Paciente(
-                    null, // ID null para nuevo paciente
+                    null,
                     txtNombre.getText().trim(),
                     cmbTipoPaciente.getValue(),
                     cmbTipoSesion.getValue(),
                     Double.parseDouble(txtValorSesion.getText()),
-                    Double.parseDouble(txtDeuda.getText()),
+                    deuda,
                     txtNotas.getText().trim()
             );
 
             ServiceManager.getPacienteDAO().save(nuevo);
-
-            if (nuevo.esDiagnostico()) {
-                // Para diagnósticos, el monto total se agrega directamente a la deuda
-                double montoTotal = nuevo.getPrecioPorSesion(); // Usamos este campo para el total
-                nuevo.setDeuda(nuevo.getDeuda() + montoTotal);
-                ServiceManager.getPacienteDAO().updateDeuda(nuevo.getId(), nuevo.getDeuda());
-            }
-
             mostrarMensaje("Paciente creado exitosamente", Alert.AlertType.INFORMATION);
 
             cargarPacientes();
             limpiarFormulario();
 
         } catch (NumberFormatException e) {
-            mostrarMensaje("Por favor ingrese números válidos en valor de sesión y deuda", Alert.AlertType.ERROR);
+            mostrarMensaje("Por favor ingrese números válidos en los campos numéricos", Alert.AlertType.ERROR);
         } catch (Exception e) {
             mostrarMensaje("Error al crear paciente: " + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -143,7 +178,11 @@ public class PacientesController {
             pacienteSeleccionado.setTipoPaciente(cmbTipoPaciente.getValue());
             pacienteSeleccionado.setTipoSesion(cmbTipoSesion.getValue());
             pacienteSeleccionado.setPrecioPorSesion(Double.parseDouble(txtValorSesion.getText()));
-            pacienteSeleccionado.setDeuda(Double.parseDouble(txtDeuda.getText()));
+
+            if (cmbTipoPaciente.getValue() != TipoPaciente.DIAGNOSTICO) {
+                pacienteSeleccionado.setDeuda(Double.parseDouble(txtDeuda.getText()));
+            }
+
             pacienteSeleccionado.setNotas(txtNotas.getText().trim());
 
             ServiceManager.getPacienteDAO().update(pacienteSeleccionado);
@@ -153,7 +192,7 @@ public class PacientesController {
             limpiarFormulario();
 
         } catch (NumberFormatException e) {
-            mostrarMensaje("Por favor ingrese números válidos en valor de sesión y deuda", Alert.AlertType.ERROR);
+            mostrarMensaje("Por favor ingrese números válidos en los campos numéricos", Alert.AlertType.ERROR);
         } catch (Exception e) {
             mostrarMensaje("Error al actualizar paciente: " + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -187,8 +226,11 @@ public class PacientesController {
         txtNombre.clear();
         cmbTipoPaciente.setValue(null);
         cmbTipoSesion.setValue(null);
+        cmbTipoSesion.setDisable(false);
         txtValorSesion.clear();
-        txtDeuda.clear();
+        txtValorSesion.setPromptText("Precio por Sesión");
+        txtDeuda.setText("0");
+        txtDeuda.setDisable(true);
         txtNotas.clear();
 
         tablaPacientes.getSelectionModel().clearSelection();
@@ -215,6 +257,15 @@ public class PacientesController {
         txtValorSesion.setText(String.valueOf(paciente.getPrecioPorSesion()));
         txtDeuda.setText(String.valueOf(paciente.getDeuda()));
         txtNotas.setText(paciente.getNotas());
+
+        // Handle Diagnostico patients when editing
+        if (paciente.getTipoPaciente() == TipoPaciente.DIAGNOSTICO) {
+            cmbTipoSesion.setDisable(true);
+            txtDeuda.setDisable(true);
+        } else {
+            cmbTipoSesion.setDisable(false);
+            txtDeuda.setDisable(false);
+        }
     }
 
     private boolean validarFormulario() {
@@ -235,9 +286,11 @@ public class PacientesController {
 
         try {
             Double.parseDouble(txtValorSesion.getText());
-            Double.parseDouble(txtDeuda.getText());
+            if (cmbTipoPaciente.getValue() != TipoPaciente.DIAGNOSTICO) {
+                Double.parseDouble(txtDeuda.getText());
+            }
         } catch (NumberFormatException e) {
-            mostrarMensaje("Valor de sesión y deuda deben ser números válidos", Alert.AlertType.WARNING);
+            mostrarMensaje("Los campos numéricos deben contener valores válidos", Alert.AlertType.WARNING);
             return false;
         }
 
