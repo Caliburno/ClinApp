@@ -88,4 +88,12 @@ public class Paciente {
     public void setNotas(String notas) {
         this.notas = notas;
     }
+
+    public boolean esDiagnostico() {
+        return this.tipoPaciente == TipoPaciente.DIAGNOSTICO;
+    }
+
+    public String getConceptoMonto() {
+        return esDiagnostico() ? "Total Diagnóstico" : "Precio por Sesión";
+    }
 }
