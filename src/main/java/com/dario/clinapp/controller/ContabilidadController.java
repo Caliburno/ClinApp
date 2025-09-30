@@ -3,8 +3,6 @@ package com.dario.clinapp.controller;
 import com.dario.clinapp.dao.*;
 import com.dario.clinapp.dao.database.ServiceManager;
 import com.dario.clinapp.model.*;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,9 +10,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.YearMonth;
-import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,6 +23,8 @@ public class ContabilidadController {
     @FXML private Label diagnosticoLabel;
     @FXML private Label estandarLabel;
     @FXML private Label totalDeudaLabel;
+    @FXML private Label mensualLabel;
+
 
     @FXML private ToggleButton mensualToggle;
     @FXML private ToggleButton diagnosticoToggle;
@@ -159,6 +157,7 @@ public class ContabilidadController {
         totalGeneralLabel.setText(String.format("$%.2f", totalGeneral));
         diagnosticoLabel.setText(String.format("$%.2f", totalesPorTipo.get(TipoPaciente.DIAGNOSTICO)));
         estandarLabel.setText(String.format("$%.2f", totalesPorTipo.get(TipoPaciente.PACIENTE_ESTANDAR)));
+        mensualLabel.setText(String.format("$%.2f", totalesPorTipo.get(TipoPaciente.MENSUAL)));
     }
 
     private void loadDeudaTable() {

@@ -43,14 +43,19 @@
       
                   <!-- Diagnóstico Card -->
                   <VBox style="-fx-background-color: #fff3e0; -fx-padding: 15; -fx-background-radius: 5;" styleClass="summary-card" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                      <Label style="-fx-font-size: 12px; -fx-font-weight: bold;" text="Diagnóstico" />
+                      <Label style="-fx-font-size: 12px; -fx-font-weight: bold;" text="Diagnósticos" />
                       <Label fx:id="diagnosticoLabel" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #f57c00;" text="\$0.00" />
                   </VBox>
       
                   <!-- Paciente Estándar Card -->
                   <VBox style="-fx-background-color: #f3e5f5; -fx-padding: 15; -fx-background-radius: 5;" styleClass="summary-card" GridPane.columnIndex="2" GridPane.rowIndex="0">
-                      <Label style="-fx-font-size: 12px; -fx-font-weight: bold;" text="Paciente Estándar" />
+                      <Label style="-fx-font-size: 12px; -fx-font-weight: bold;" text="Pacientes Estándar" />
                       <Label fx:id="estandarLabel" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #7b1fa2;" text="\$0.00" />
+                  </VBox>
+
+                  <VBox style="-fx-background-color: #fff3e0; -fx-padding: 15; -fx-background-radius: 5;" styleClass="summary-card" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                      <Label style="-fx-font-size: 12px; -fx-font-weight: bold;" text="Mensuales" />
+                      <Label fx:id="mensualLabel" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #f57c00;" text="\$0.00" />
                   </VBox>
                <columnConstraints>
                   <ColumnConstraints />
