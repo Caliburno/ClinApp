@@ -53,6 +53,15 @@ public class SesionesController {
         // Configurar botones inicialmente
         btnEditar.setDisable(true);
         btnEliminar.setDisable(true);
+
+        // Listener for when a patient is selected in the ComboBox
+        cmbPaciente.setOnAction(e -> {
+            Paciente pacienteSeleccionado = cmbPaciente.getValue();
+            if (pacienteSeleccionado != null) {
+                // Autopopulate the session type based on patient's default
+                cmbTipoSesion.setValue(pacienteSeleccionado.getTipoSesion());
+            }
+        });
     }
 
     private void configurarTabla() {
