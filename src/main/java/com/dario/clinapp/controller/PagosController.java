@@ -12,6 +12,8 @@ import java.util.List;
 
 import java.time.LocalDate;
 import java.util.stream.Collectors;
+import com.dario.clinapp.service.PaymentAllocationService;
+import java.util.List;
 
 public class PagosController {
 
@@ -144,10 +146,9 @@ public class PagosController {
 
             TipoPago tipoPago = cmbTipoPago.getValue();
 
-            if (tipoPago == TipoPago.SESION) {
-                // Si es pago de sesión, marcar sesiones como pagas
-                marcarSesionesComoPagas(paciente, montoPago);
-            }
+            marcarSesionesComoPagas(paciente, montoPago);
+
+            actualizarEstadoInformes(paciente);
 
             // Actualizar deuda del paciente (restarle lo que pagó)
             actualizarDeudaPaciente(paciente, -montoPago);
@@ -191,6 +192,45 @@ public class PagosController {
 
         } catch (Exception e) {
             System.err.println("Error marcando sesiones como pagas: " + e.getMessage());
+        }
+    }
+
+    private void actualizarEstadoInformes(Paciente paciente) {
+        try {
+            // Get PaymentAllocationService
+            PaymentAllocationService paymentService = new PaymentAllocationService(
+                    ServiceManager.getSesionDAO(),
+                    ServiceManager.getPagoDAO(),
+                    ServiceManager.getInformeDAO()
+            );
+
+            // Get all informes for this patient
+            List<Informe> informes = ServiceManager.getInformeDAO().findByPacienteId(paciente.getId());
+
+            for (Informe informe : informes) {
+                // Recalculate entregado (or "saldado" as you renamed it)
+                double entregadoActualizado = paymentService.calcularSaldadoInforme(paciente, informe.getId());
+                double saldoActualizado = informe.getPrecio() - entregadoActualizado;
+
+                // Update the informe
+                informe.setSaldado(entregadoActualizado);
+                informe.setSaldo(saldoActualizado);
+
+                // Update payment status
+                if (saldoActualizado <= 0) {
+                    informe.setEstadoPagoInforme(EstadoPagoInforme.PAGADO);
+                } else if (entregadoActualizado > 0) {
+                    informe.setEstadoPagoInforme(EstadoPagoInforme.PAGO_PARCIAL);
+                } else {
+                    informe.setEstadoPagoInforme(EstadoPagoInforme.PENDIENTE);
+                }
+
+                // Save to database
+                ServiceManager.getInformeDAO().update(informe);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error actualizando estado de informes: " + e.getMessage());
         }
     }
 

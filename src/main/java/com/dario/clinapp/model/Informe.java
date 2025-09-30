@@ -71,11 +71,11 @@ public class Informe {
         this.precio = precio;
     }
 
-    public double getEntregado() {
+    public double getSaldado() {
         return entregado;
     }
 
-    public void setEntregado(double entregado) {
+    public void setSaldado(double entregado) {
         this.entregado = entregado;
     }
 

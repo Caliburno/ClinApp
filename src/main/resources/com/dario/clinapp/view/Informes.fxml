@@ -29,11 +29,12 @@
                                 <Insets top="15.0" />
                             </HBox.margin>
                         </TextField>
-                        <TextField fx:id="txtAdelantado" minWidth="-Infinity" promptText="Adelantado">
+                        <TextField fx:id="txtSaldado" minWidth="-Infinity" promptText="Saldado">
                             <HBox.margin>
                                 <Insets top="15.0" />
                             </HBox.margin>
                         </TextField>
+                        <CheckBox fx:id="chkEditarSaldado" text="Editar Manualmente"/>
                         <TextField fx:id="txtSaldo" minWidth="-Infinity" promptText="Saldo" editable="false" style="-fx-background-color: #f0f0f0;">
                             <HBox.margin>
                                 <Insets top="15.0" />
@@ -42,7 +43,7 @@
                         <VBox prefHeight="200.0" prefWidth="100.0">
                             <children>
                                 <Label text="Pago" />
-                                <ComboBox fx:id="cmbEstadoPago" minWidth="-Infinity" prefWidth="100.0" />
+                                <ComboBox fx:id="cmbEstadoPagoInforme" minWidth="-Infinity" prefWidth="100.0" />
                             </children>
                         </VBox>
                         <VBox prefHeight="200.0" prefWidth="100.0">
@@ -77,9 +78,9 @@
                         <TableColumn fx:id="colPaciente" prefWidth="100.0" text="Paciente" />
                         <TableColumn fx:id="colTipoInforme" prefWidth="100.0" text="Tipo" />
                         <TableColumn fx:id="colPrecio" prefWidth="100.0" text="Precio" />
-                        <TableColumn fx:id="colAdelantado" prefWidth="100.0" text="Adelantado" />
+                        <TableColumn fx:id="colSaldado" prefWidth="100.0" text="Saldado" />
                         <TableColumn fx:id="colSaldo" prefWidth="100.0" text="Saldo" />
-                        <TableColumn fx:id="colEstadoPago" prefWidth="100.0" text="Pago" />
+                        <TableColumn fx:id="colEstadoPagoInforme" prefWidth="100.0" text="Pago" />
                         <TableColumn fx:id="colEstadoInforme" prefWidth="100.0" text="Estado" />
                         <TableColumn fx:id="colNotas" prefWidth="100.0" text="Notas" />
                     </columns>

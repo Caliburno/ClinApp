@@ -25,7 +25,7 @@ public class InformeDAOImpl implements InformeDAO {
             stmt.setLong(1, informe.getPaciente().getId());
             stmt.setString(2, informe.getTipoInforme().name());
             stmt.setDouble(3, informe.getPrecio());
-            stmt.setDouble(4, informe.getEntregado());
+            stmt.setDouble(4, informe.getSaldado());
             stmt.setDouble(5, informe.getSaldo());
             stmt.setString(6, informe.getEstadoInforme().name());
             stmt.setString(7, informe.getEstadoPagoInforme().name());
@@ -172,7 +172,7 @@ public class InformeDAOImpl implements InformeDAO {
             stmt.setLong(1, informe.getPaciente().getId());
             stmt.setString(2, informe.getTipoInforme().name());
             stmt.setDouble(3, informe.getPrecio());
-            stmt.setDouble(4, informe.getEntregado());
+            stmt.setDouble(4, informe.getSaldado());
             stmt.setDouble(5, informe.getSaldo());
             stmt.setString(6, informe.getEstadoInforme().name());
             stmt.setString(7, informe.getEstadoPagoInforme().name());

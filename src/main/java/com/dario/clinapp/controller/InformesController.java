@@ -2,6 +2,7 @@ package com.dario.clinapp.controller;
 
 import com.dario.clinapp.dao.database.ServiceManager;
 import com.dario.clinapp.model.*;
+import com.dario.clinapp.service.PaymentAllocationService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -11,85 +12,49 @@ import javafx.util.StringConverter;
 
 public class InformesController {
 
-    // Controles del formulario
     @FXML private ComboBox<Paciente> cmbPaciente;
     @FXML private ComboBox<TipoInforme> cmbTipoInforme;
     @FXML private TextField txtPrecio;
-    @FXML private TextField txtAdelantado;
-    @FXML private TextField txtSaldo; // No editable, se calcula automáticamente
-    @FXML private ComboBox<EstadoPagoInforme> cmbEstadoPago;
+    @FXML private TextField txtSaldado;
+    @FXML private TextField txtSaldo;
+    @FXML private CheckBox chkEditarSaldado;
     @FXML private ComboBox<EstadoInforme> cmbEstadoInforme;
+    @FXML private ComboBox<EstadoPagoInforme> cmbEstadoPagoInforme;
     @FXML private TextField txtNotas;
 
-    // Botones
     @FXML private Button btnAgregar;
     @FXML private Button btnEditar;
     @FXML private Button btnBorrar;
     @FXML private Button btnLimpiar;
 
-    // Tabla y columnas
     @FXML private TableView<Informe> tablaInformes;
     @FXML private TableColumn<Informe, String> colPaciente;
     @FXML private TableColumn<Informe, TipoInforme> colTipoInforme;
     @FXML private TableColumn<Informe, Double> colPrecio;
-    @FXML private TableColumn<Informe, Double> colAdelantado;
+    @FXML private TableColumn<Informe, Double> colSaldado;
     @FXML private TableColumn<Informe, Double> colSaldo;
-    @FXML private TableColumn<Informe, EstadoPagoInforme> colEstadoPago;
     @FXML private TableColumn<Informe, EstadoInforme> colEstadoInforme;
-    @FXML private TableColumn<Informe, String> colNotas;
+    @FXML private TableColumn<Informe, EstadoPagoInforme> colEstadoPagoInforme;
 
-    // Variables de clase
     private ObservableList<Informe> listaInformes = FXCollections.observableArrayList();
     private ObservableList<Paciente> listaPacientes = FXCollections.observableArrayList();
     private Informe informeSeleccionado = null;
+    private PaymentAllocationService paymentAllocationService;
 
     public void initialize() {
+        // Initialize payment allocation service
+        paymentAllocationService = new PaymentAllocationService(
+                ServiceManager.getSesionDAO(),
+                ServiceManager.getPagoDAO(),
+                ServiceManager.getInformeDAO()
+        );
+
         configurarTabla();
         configurarComboBoxes();
-        cargarPacientes();
-        cargarInformes();
+        cargarDatos();
         configurarSeleccionTabla();
-        configurarCalculoSaldo();
+        configurarListeners();
 
-        // Configurar botones inicialmente
-        btnEditar.setDisable(true);
-        btnBorrar.setDisable(true);
-
-        // Configurar campos iniciales
-        txtAdelantado.setText("0");
-        txtSaldo.setEditable(false);
-    }
-
-    private void configurarTabla() {
-        // Configurar las columnas
-        colPaciente.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(cellData.getValue().getPaciente().getNombre()));
-
-        colTipoInforme.setCellValueFactory(new PropertyValueFactory<>("tipoInforme"));
-        colPrecio.setCellValueFactory(new PropertyValueFactory<>("precio"));
-        colAdelantado.setCellValueFactory(new PropertyValueFactory<>("entregado"));
-        colSaldo.setCellValueFactory(new PropertyValueFactory<>("saldo"));
-        colEstadoPago.setCellValueFactory(new PropertyValueFactory<>("estadoPagoInforme"));
-        colEstadoInforme.setCellValueFactory(new PropertyValueFactory<>("estadoInforme"));
-        colNotas.setCellValueFactory(new PropertyValueFactory<>("notas"));
-
-        tablaInformes.setItems(listaInformes);
-    }
-
-    private void configurarComboBoxes() {
-        // Configurar ComboBox de Tipos de Informe
-        cmbTipoInforme.setItems(FXCollections.observableArrayList(TipoInforme.values()));
-
-        // Configurar ComboBox de Estados de Pago
-        cmbEstadoPago.setItems(FXCollections.observableArrayList(EstadoPagoInforme.values()));
-
-        // Configurar ComboBox de Estados de Informe
-        cmbEstadoInforme.setItems(FXCollections.observableArrayList(EstadoInforme.values()));
-
-        // Configurar ComboBox de Pacientes
-        cmbPaciente.setItems(listaPacientes);
-
-        // Converter para mostrar solo el nombre del paciente en el ComboBox
         cmbPaciente.setConverter(new StringConverter<Paciente>() {
             @Override
             public String toString(Paciente paciente) {
@@ -98,40 +63,133 @@ public class InformesController {
 
             @Override
             public Paciente fromString(String string) {
-                return listaPacientes.stream()
-                        .filter(p -> p.getNombre().equals(string))
-                        .findFirst()
-                        .orElse(null);
+                return null; // Not needed for display purposes
+            }
+        });
+
+        btnEditar.setDisable(true);
+        btnBorrar.setDisable(true);
+
+        // Saldado field starts disabled
+        txtSaldado.setDisable(true);
+        txtSaldo.setDisable(true); // Saldo is always calculated
+        cmbEstadoPagoInforme.setDisable(true); // Estado pago is auto-calculated
+    }
+
+    private void configurarListeners() {
+        // Listener for patient selection
+        cmbPaciente.setOnAction(e -> {
+            Paciente paciente = cmbPaciente.getValue();
+            if (paciente != null) {
+                if (paciente.getTipoPaciente() == TipoPaciente.DIAGNOSTICO) {
+                    // Auto-populate for diagnosis patients
+                    cmbTipoInforme.setValue(TipoInforme.PSICODIAGNOSTICO);
+                    txtPrecio.setText(String.valueOf(paciente.getPrecioPorSesion()));
+                    calcularSaldadoYSaldo();
+                } else {
+                    // For other patients, just calculate with current values
+                    if (!txtPrecio.getText().isEmpty()) {
+                        calcularSaldadoYSaldo();
+                    }
+                }
+            }
+        });
+
+        // Listener for precio changes
+        txtPrecio.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.trim().isEmpty() && cmbPaciente.getValue() != null) {
+                calcularSaldadoYSaldo();
+            }
+        });
+
+        // Listener for manual ealdado changes (when enabled)
+        txtSaldado.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (chkEditarSaldado.isSelected() && !newVal.trim().isEmpty()) {
+                calcularSaldoManual();
+            }
+        });
+
+        // Listener for edit checkbox
+        chkEditarSaldado.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            txtSaldado.setDisable(!newVal);
+            if (!newVal) {
+                // If unchecked, recalculate automatically
+                calcularSaldadoYSaldo();
             }
         });
     }
 
-    private void configurarCalculoSaldo() {
-        // Listener para calcular automáticamente el saldo
-        txtPrecio.textProperty().addListener((obs, oldVal, newVal) -> calcularSaldo());
-        txtAdelantado.textProperty().addListener((obs, oldVal, newVal) -> calcularSaldo());
-    }
+    private void calcularSaldadoYSaldo() {
+        if (cmbPaciente.getValue() == null || txtPrecio.getText().trim().isEmpty()) {
+            return;
+        }
 
-    private void calcularSaldo() {
         try {
-            double precio = txtPrecio.getText().isEmpty() ? 0 : Double.parseDouble(txtPrecio.getText());
-            double adelantado = txtAdelantado.getText().isEmpty() ? 0 : Double.parseDouble(txtAdelantado.getText());
-            double saldo = precio - adelantado;
+            double precio = Double.parseDouble(txtPrecio.getText());
+            Paciente paciente = cmbPaciente.getValue();
 
+            // Calculate saldado based on payment allocation
+            double saldado = paymentAllocationService.calcularSaldadoNuevoInforme(paciente, precio);
+
+            txtSaldado.setText(String.format("%.2f", saldado));
+
+            // Calculate saldo
+            double saldo = precio - saldado;
             txtSaldo.setText(String.format("%.2f", saldo));
 
-            // Actualizar automáticamente el estado de pago basado en el saldo
-            if (saldo <= 0) {
-                cmbEstadoPago.setValue(EstadoPagoInforme.PAGADO);
-            } else if (adelantado > 0 && saldo > 0) {
-                cmbEstadoPago.setValue(EstadoPagoInforme.PAGO_PARCIAL);
-            } else {
-                cmbEstadoPago.setValue(EstadoPagoInforme.PENDIENTE);
-            }
+            // Auto-set payment status
+            actualizarEstadoPago(saldado, saldo);
 
         } catch (NumberFormatException e) {
-            txtSaldo.setText("0.00");
+            txtSaldado.clear();
+            txtSaldo.clear();
         }
+    }
+
+    private void calcularSaldoManual() {
+        try {
+            double precio = Double.parseDouble(txtPrecio.getText());
+            double saldado = Double.parseDouble(txtSaldado.getText());
+            double saldo = precio - saldado;
+
+            txtSaldo.setText(String.format("%.2f", saldo));
+            actualizarEstadoPago(saldado, saldo);
+
+        } catch (NumberFormatException e) {
+            txtSaldo.clear();
+        }
+    }
+
+    private void actualizarEstadoPago(double saldado, double saldo) {
+        if (saldo <= 0) {
+            cmbEstadoPagoInforme.setValue(EstadoPagoInforme.PAGADO);
+        } else if (saldado > 0) {
+            cmbEstadoPagoInforme.setValue(EstadoPagoInforme.PAGO_PARCIAL);
+        } else {
+            cmbEstadoPagoInforme.setValue(EstadoPagoInforme.PENDIENTE);
+        }
+    }
+
+    private void configurarTabla() {
+        colPaciente.setCellValueFactory(data ->
+                new javafx.beans.property.SimpleStringProperty(data.getValue().getPaciente().getNombre()));
+        colTipoInforme.setCellValueFactory(new PropertyValueFactory<>("tipoInforme"));
+        colPrecio.setCellValueFactory(new PropertyValueFactory<>("precio"));
+        colSaldado.setCellValueFactory(new PropertyValueFactory<>("saldado"));
+        colSaldo.setCellValueFactory(new PropertyValueFactory<>("saldo"));
+        colEstadoInforme.setCellValueFactory(new PropertyValueFactory<>("estadoInforme"));
+        colEstadoPagoInforme.setCellValueFactory(new PropertyValueFactory<>("estadoPagoInforme"));
+
+        tablaInformes.setItems(listaInformes);
+    }
+
+    private void configurarComboBoxes() {
+        cmbTipoInforme.setItems(FXCollections.observableArrayList(TipoInforme.values()));
+        cmbEstadoInforme.setItems(FXCollections.observableArrayList(EstadoInforme.values()));
+        cmbEstadoPagoInforme.setItems(FXCollections.observableArrayList(EstadoPagoInforme.values()));
+
+        // Set default estado informe
+        cmbEstadoInforme.setValue(EstadoInforme.SIN_HACER);
     }
 
     private void configurarSeleccionTabla() {
@@ -156,38 +214,37 @@ public class InformesController {
             }
 
             double precio = Double.parseDouble(txtPrecio.getText());
-            double adelantado = Double.parseDouble(txtAdelantado.getText());
-            double saldo = precio - adelantado;
+            double saldado = Double.parseDouble(txtSaldado.getText());
+            double saldo = Double.parseDouble(txtSaldo.getText());
 
-            Informe nuevoInforme = new Informe(
-                    null, // ID null para nuevo informe
+            Informe nuevo = new Informe(
+                    null,
                     cmbPaciente.getValue(),
                     cmbTipoInforme.getValue(),
                     precio,
-                    adelantado,
+                    saldado,
                     saldo,
                     cmbEstadoInforme.getValue(),
-                    cmbEstadoPago.getValue(),
+                    cmbEstadoPagoInforme.getValue(),
                     txtNotas.getText().trim()
             );
 
-            ServiceManager.getInformeDAO().save(nuevoInforme);
+            ServiceManager.getInformeDAO().save(nuevo);
 
-            // Si hay saldo pendiente, agregarlo a la deuda del paciente
-            if (saldo > 0) {
-                actualizarDeudaPaciente(cmbPaciente.getValue(), saldo);
-            }
+            // Update patient debt
+            Paciente paciente = cmbPaciente.getValue();
+            double nuevaDeuda = paciente.getDeuda() + saldo;
+            ServiceManager.getPacienteDAO().updateDeuda(paciente.getId(), nuevaDeuda);
 
-            mostrarMensaje("Informe agregado exitosamente", Alert.AlertType.INFORMATION);
+            mostrarMensaje("Informe creado exitosamente", Alert.AlertType.INFORMATION);
 
             cargarInformes();
-            cargarPacientes(); // Recargar para mostrar deuda actualizada
             limpiarFormulario();
 
         } catch (NumberFormatException e) {
-            mostrarMensaje("Por favor ingrese números válidos en precio y adelantado", Alert.AlertType.ERROR);
+            mostrarMensaje("Por favor ingrese números válidos", Alert.AlertType.ERROR);
         } catch (Exception e) {
-            mostrarMensaje("Error al agregar informe: " + e.getMessage(), Alert.AlertType.ERROR);
+            mostrarMensaje("Error al crear informe: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
 
@@ -203,39 +260,36 @@ public class InformesController {
                 return;
             }
 
-            // Revertir la deuda anterior si había saldo pendiente
-            if (informeSeleccionado.getSaldo() > 0) {
-                actualizarDeudaPaciente(informeSeleccionado.getPaciente(), -informeSeleccionado.getSaldo());
-            }
-
-            double precio = Double.parseDouble(txtPrecio.getText());
-            double adelantado = Double.parseDouble(txtAdelantado.getText());
-            double saldo = precio - adelantado;
+            double precioAnterior = informeSeleccionado.getPrecio();
+            double saldadoAnterior = informeSeleccionado.getSaldado();
+            double saldoAnterior = informeSeleccionado.getSaldo();
 
             informeSeleccionado.setPaciente(cmbPaciente.getValue());
             informeSeleccionado.setTipoInforme(cmbTipoInforme.getValue());
-            informeSeleccionado.setPrecio(precio);
-            informeSeleccionado.setEntregado(adelantado);
-            informeSeleccionado.setSaldo(saldo);
+            informeSeleccionado.setPrecio(Double.parseDouble(txtPrecio.getText()));
+            informeSeleccionado.setSaldado(Double.parseDouble(txtSaldado.getText()));
+            informeSeleccionado.setSaldo(Double.parseDouble(txtSaldo.getText()));
             informeSeleccionado.setEstadoInforme(cmbEstadoInforme.getValue());
-            informeSeleccionado.setEstadoPagoInforme(cmbEstadoPago.getValue());
+            informeSeleccionado.setEstadoPagoInforme(cmbEstadoPagoInforme.getValue());
             informeSeleccionado.setNotas(txtNotas.getText().trim());
 
             ServiceManager.getInformeDAO().update(informeSeleccionado);
 
-            // Agregar nuevo saldo a la deuda si existe
-            if (saldo > 0) {
-                actualizarDeudaPaciente(cmbPaciente.getValue(), saldo);
+            // Update patient debt if saldo changed
+            double diferenciaSaldo = informeSeleccionado.getSaldo() - saldoAnterior;
+            if (diferenciaSaldo != 0) {
+                Paciente paciente = cmbPaciente.getValue();
+                double nuevaDeuda = paciente.getDeuda() + diferenciaSaldo;
+                ServiceManager.getPacienteDAO().updateDeuda(paciente.getId(), nuevaDeuda);
             }
 
             mostrarMensaje("Informe actualizado exitosamente", Alert.AlertType.INFORMATION);
 
             cargarInformes();
-            cargarPacientes();
             limpiarFormulario();
 
         } catch (NumberFormatException e) {
-            mostrarMensaje("Por favor ingrese números válidos en precio y adelantado", Alert.AlertType.ERROR);
+            mostrarMensaje("Por favor ingrese números válidos", Alert.AlertType.ERROR);
         } catch (Exception e) {
             mostrarMensaje("Error al actualizar informe: " + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -251,22 +305,19 @@ public class InformesController {
         Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
         confirmacion.setTitle("Confirmar eliminación");
         confirmacion.setHeaderText("¿Está seguro de eliminar este informe?");
-        confirmacion.setContentText("Esta acción revertirá el saldo en la deuda del paciente si corresponde.");
+        confirmacion.setContentText("Esta acción no se puede deshacer.");
 
         if (confirmacion.showAndWait().get() == ButtonType.OK) {
             try {
-                // Revertir la deuda si había saldo pendiente
-                if (informeSeleccionado.getSaldo() > 0) {
-                    actualizarDeudaPaciente(informeSeleccionado.getPaciente(), -informeSeleccionado.getSaldo());
-                }
+                // Subtract saldo from patient debt
+                Paciente paciente = informeSeleccionado.getPaciente();
+                double nuevaDeuda = paciente.getDeuda() - informeSeleccionado.getSaldo();
+                ServiceManager.getPacienteDAO().updateDeuda(paciente.getId(), nuevaDeuda);
 
                 ServiceManager.getInformeDAO().delete(informeSeleccionado.getId());
                 mostrarMensaje("Informe eliminado exitosamente", Alert.AlertType.INFORMATION);
-
                 cargarInformes();
-                cargarPacientes();
                 limpiarFormulario();
-
             } catch (Exception e) {
                 mostrarMensaje("Error al eliminar informe: " + e.getMessage(), Alert.AlertType.ERROR);
             }
@@ -278,11 +329,13 @@ public class InformesController {
         cmbPaciente.setValue(null);
         cmbTipoInforme.setValue(null);
         txtPrecio.clear();
-        txtAdelantado.setText("0");
-        txtSaldo.setText("0.00");
-        cmbEstadoPago.setValue(null);
-        cmbEstadoInforme.setValue(null);
+        txtSaldado.clear();
+        txtSaldo.clear();
+        cmbEstadoInforme.setValue(EstadoInforme.SIN_HACER);
+        cmbEstadoPagoInforme.setValue(null);
         txtNotas.clear();
+        chkEditarSaldado.setSelected(false);
+        txtSaldado.setDisable(true);
 
         tablaInformes.getSelectionModel().clearSelection();
         informeSeleccionado = null;
@@ -290,11 +343,17 @@ public class InformesController {
         btnBorrar.setDisable(true);
     }
 
+    private void cargarDatos() {
+        cargarPacientes();
+        cargarInformes();
+    }
+
     private void cargarPacientes() {
         try {
             var pacientes = ServiceManager.getPacienteDAO().findAll();
             listaPacientes.clear();
             listaPacientes.addAll(pacientes);
+            cmbPaciente.setItems(listaPacientes);
         } catch (Exception e) {
             mostrarMensaje("Error al cargar pacientes: " + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -315,21 +374,11 @@ public class InformesController {
         cmbPaciente.setValue(informe.getPaciente());
         cmbTipoInforme.setValue(informe.getTipoInforme());
         txtPrecio.setText(String.valueOf(informe.getPrecio()));
-        txtAdelantado.setText(String.valueOf(informe.getEntregado()));
-        txtSaldo.setText(String.format("%.2f", informe.getSaldo()));
-        cmbEstadoPago.setValue(informe.getEstadoPagoInforme());
+        txtSaldado.setText(String.valueOf(informe.getSaldado()));
+        txtSaldo.setText(String.valueOf(informe.getSaldo()));
         cmbEstadoInforme.setValue(informe.getEstadoInforme());
+        cmbEstadoPagoInforme.setValue(informe.getEstadoPagoInforme());
         txtNotas.setText(informe.getNotas());
-    }
-
-    private void actualizarDeudaPaciente(Paciente paciente, double cambio) {
-        try {
-            double nuevaDeuda = paciente.getDeuda() + cambio;
-            paciente.setDeuda(nuevaDeuda);
-            ServiceManager.getPacienteDAO().updateDeuda(paciente.getId(), nuevaDeuda);
-        } catch (Exception e) {
-            mostrarMensaje("Error al actualizar deuda del paciente: " + e.getMessage(), Alert.AlertType.ERROR);
-        }
     }
 
     private boolean validarFormulario() {
@@ -343,32 +392,17 @@ public class InformesController {
             return false;
         }
 
-        if (txtPrecio.getText().trim().isEmpty()) {
-            mostrarMensaje("Ingrese el precio del informe", Alert.AlertType.WARNING);
-            return false;
-        }
-
         if (cmbEstadoInforme.getValue() == null) {
-            mostrarMensaje("Seleccione el estado del informe", Alert.AlertType.WARNING);
+            mostrarMensaje("Seleccione un estado", Alert.AlertType.WARNING);
             return false;
         }
 
         try {
-            double precio = Double.parseDouble(txtPrecio.getText());
-            double adelantado = Double.parseDouble(txtAdelantado.getText());
-
-            if (precio < 0 || adelantado < 0) {
-                mostrarMensaje("Los montos no pueden ser negativos", Alert.AlertType.WARNING);
-                return false;
-            }
-
-            if (adelantado > precio) {
-                mostrarMensaje("El monto adelantado no puede ser mayor al precio total", Alert.AlertType.WARNING);
-                return false;
-            }
-
+            Double.parseDouble(txtPrecio.getText());
+            Double.parseDouble(txtSaldado.getText());
+            Double.parseDouble(txtSaldo.getText());
         } catch (NumberFormatException e) {
-            mostrarMensaje("Ingrese números válidos en precio y adelantado", Alert.AlertType.WARNING);
+            mostrarMensaje("Los campos numéricos deben contener valores válidos", Alert.AlertType.WARNING);
             return false;
         }
 

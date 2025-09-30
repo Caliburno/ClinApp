@@ -1,5 +1,4 @@
 package com.dario.clinapp.dao.database;// En dao/database/ExcelBackupManager.java
-import com.dario.clinapp.dao.database.ServiceManager;
 import com.dario.clinapp.model.Informe;
 import com.dario.clinapp.model.Paciente;
 import com.dario.clinapp.model.Pago;
@@ -8,7 +7,6 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -151,7 +149,7 @@ public class ExcelBackupManager {
             row.createCell(1).setCellValue(informe.getPaciente().getNombre());
             row.createCell(2).setCellValue(informe.getTipoInforme().toString());
             row.createCell(3).setCellValue(informe.getPrecio());
-            row.createCell(4).setCellValue(informe.getEntregado());
+            row.createCell(4).setCellValue(informe.getSaldado());
             row.createCell(5).setCellValue(informe.getSaldo());
             row.createCell(6).setCellValue(informe.getEstadoInforme().toString());
             row.createCell(7).setCellValue(informe.getEstadoPagoInforme().toString());
