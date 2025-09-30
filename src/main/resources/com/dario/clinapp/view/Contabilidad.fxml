@@ -14,7 +14,6 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-
 <StackPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.dario.clinapp.controller.ContabilidadController">
    <children>
       <VBox spacing="15" style="-fx-padding: 20;">
@@ -61,6 +60,7 @@
                   <ColumnConstraints />
                   <ColumnConstraints />
                   <ColumnConstraints />
+                  <ColumnConstraints />
                </columnConstraints>
                <rowConstraints>
                   <RowConstraints />
@@ -95,11 +95,11 @@
           <TableView fx:id="deudaTable" VBox.vgrow="ALWAYS">
               <columns>
                   <TableColumn fx:id="nombreColumn" prefWidth="200" text="Paciente" />
-                  <TableColumn fx:id="tipoPacienteColumn" prefWidth="150" text="Tipo" />
                   <TableColumn fx:id="deudaTotalColumn" prefWidth="120" text="Deuda Total" />
+                  <TableColumn fx:id="tipoPacienteColumn" prefWidth="150" text="Tipo Paciente" />
                   <TableColumn fx:id="sesionesColumn" prefWidth="150" text="Sesiones Pendientes" />
-                  <TableColumn fx:id="informesColumn" prefWidth="150" text="Informes (Saldo)" />
-                  <TableColumn fx:id="diagnosticoColumn" prefWidth="120" text="Diagnóstico" />
+                  <TableColumn fx:id="informesColumn" prefWidth="150" text="Saldo Informes" />
+                  <TableColumn fx:id="diagnosticoColumn" prefWidth="120" text="Saldo Diagnóstico" />
               </columns>
           </TableView>
       
