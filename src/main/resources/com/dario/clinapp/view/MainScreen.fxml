@@ -12,7 +12,7 @@
             <Button mnemonicParsing="false" onAction="#showSesiones" text="Sesiones" />
             <Button mnemonicParsing="false" onAction="#showPagos" text="Pagos" />
             <Button mnemonicParsing="false" onAction="#showInformes" text="Informes" />
-            <Button mnemonicParsing="false" text="Contabilidad" />
+            <Button mnemonicParsing="false" onAction="#showContabilidad" text="Contabilidad" />
         </items>
       </ToolBar>
    </top>

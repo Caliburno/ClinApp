@@ -46,4 +46,8 @@ public class MainScreenController {
         loadCenter("/com/dario/clinapp/view/Informes.fxml");
     }
 
+    @FXML
+    private void showContabilidad(){
+        loadCenter("/com/dario/clinapp/view/Contabilidad.fxml");
+    }
 }
