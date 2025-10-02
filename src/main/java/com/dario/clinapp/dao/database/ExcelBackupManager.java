@@ -1,4 +1,5 @@
-package com.dario.clinapp.dao.database;// En dao/database/ExcelBackupManager.java
+package com.dario.clinapp.dao.database;
+
 import com.dario.clinapp.model.Informe;
 import com.dario.clinapp.model.Paciente;
 import com.dario.clinapp.model.Pago;
@@ -7,36 +8,31 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileOutputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.nio.file.Path;
 import java.util.List;
 
 public class ExcelBackupManager {
 
-    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+    /**
+     * Exports all tables to a single Excel file in the given target folder.
+     * @param targetFolder the folder where the Excel will be saved
+     * @return path to the created Excel file
+     */
+    public static Path exportarTodasLasTablas(Path targetFolder) {
+        try (Workbook workbook = new XSSFWorkbook()) {
 
-    public static String exportarTodasLasTablas() {
-        try {
-            String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
-            String fileName = String.format("ClinApp_Backup_%s.xlsx", timestamp);
-
-            Workbook workbook = new XSSFWorkbook();
-
-            // Exportar cada tabla a una hoja separada
             exportarPacientes(workbook);
             exportarSesiones(workbook);
             exportarInformes(workbook);
             exportarPagos(workbook);
 
-            // Guardar el archivo
-            try (FileOutputStream fileOut = new FileOutputStream(fileName)) {
+            Path excelPath = targetFolder.resolve("clinapp.xlsx");
+            try (FileOutputStream fileOut = new FileOutputStream(excelPath.toFile())) {
                 workbook.write(fileOut);
             }
 
-            workbook.close();
-
-            System.out.println("Backup Excel creado: " + fileName);
-            return fileName;
+            System.out.println("Backup Excel creado: " + excelPath);
+            return excelPath;
 
         } catch (Exception e) {
             throw new RuntimeException("Error creando backup Excel", e);
@@ -45,30 +41,13 @@ public class ExcelBackupManager {
 
     private static void exportarPacientes(Workbook workbook) throws Exception {
         Sheet sheet = workbook.createSheet("Pacientes");
-
-        // Crear encabezados
-        Row headerRow = sheet.createRow(0);
         String[] headers = {"ID", "Nombre", "Tipo Paciente", "Tipo Sesión", "Precio por Sesión", "Deuda", "Notas"};
+        writeHeaderRow(workbook, sheet, headers);
 
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-
-            // Estilo para encabezados
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setBold(true);
-            headerStyle.setFont(font);
-            cell.setCellStyle(headerStyle);
-        }
-
-        // Obtener datos y llenar filas
         List<Paciente> pacientes = ServiceManager.getPacienteDAO().findAll();
-
         int rowNum = 1;
         for (Paciente paciente : pacientes) {
             Row row = sheet.createRow(rowNum++);
-
             row.createCell(0).setCellValue(paciente.getId());
             row.createCell(1).setCellValue(paciente.getNombre());
             row.createCell(2).setCellValue(paciente.getTipoPaciente().toString());
@@ -77,37 +56,18 @@ public class ExcelBackupManager {
             row.createCell(5).setCellValue(paciente.getDeuda());
             row.createCell(6).setCellValue(paciente.getNotas() != null ? paciente.getNotas() : "");
         }
-
-        // Autoajustar columnas
-        for (int i = 0; i < headers.length; i++) {
-            sheet.autoSizeColumn(i);
-        }
+        autoSize(sheet, headers.length);
     }
 
     private static void exportarSesiones(Workbook workbook) throws Exception {
         Sheet sheet = workbook.createSheet("Sesiones");
-
-        // Crear encabezados
-        Row headerRow = sheet.createRow(0);
         String[] headers = {"ID", "Paciente", "Tipo Sesión", "Fecha", "Estado Pago", "Notas"};
-
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setBold(true);
-            headerStyle.setFont(font);
-            cell.setCellStyle(headerStyle);
-        }
+        writeHeaderRow(workbook, sheet, headers);
 
         List<Sesion> sesiones = ServiceManager.getSesionDAO().findAll();
-
         int rowNum = 1;
         for (Sesion sesion : sesiones) {
             Row row = sheet.createRow(rowNum++);
-
             row.createCell(0).setCellValue(sesion.getId());
             row.createCell(1).setCellValue(sesion.getPaciente().getNombre());
             row.createCell(2).setCellValue(sesion.getTipoSesion().toString());
@@ -115,36 +75,19 @@ public class ExcelBackupManager {
             row.createCell(4).setCellValue(sesion.getEstadoPagoSesion().toString());
             row.createCell(5).setCellValue(sesion.getNotas() != null ? sesion.getNotas() : "");
         }
-
-        for (int i = 0; i < headers.length; i++) {
-            sheet.autoSizeColumn(i);
-        }
+        autoSize(sheet, headers.length);
     }
 
     private static void exportarInformes(Workbook workbook) throws Exception {
         Sheet sheet = workbook.createSheet("Informes");
-
-        Row headerRow = sheet.createRow(0);
         String[] headers = {"ID", "Paciente", "Tipo Informe", "Precio", "Entregado", "Saldo",
                 "Estado Informe", "Estado Pago", "Notas"};
-
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setBold(true);
-            headerStyle.setFont(font);
-            cell.setCellStyle(headerStyle);
-        }
+        writeHeaderRow(workbook, sheet, headers);
 
         List<Informe> informes = ServiceManager.getInformeDAO().findAll();
-
         int rowNum = 1;
         for (Informe informe : informes) {
             Row row = sheet.createRow(rowNum++);
-
             row.createCell(0).setCellValue(informe.getId());
             row.createCell(1).setCellValue(informe.getPaciente().getNombre());
             row.createCell(2).setCellValue(informe.getTipoInforme().toString());
@@ -155,35 +98,18 @@ public class ExcelBackupManager {
             row.createCell(7).setCellValue(informe.getEstadoPagoInforme().toString());
             row.createCell(8).setCellValue(informe.getNotas() != null ? informe.getNotas() : "");
         }
-
-        for (int i = 0; i < headers.length; i++) {
-            sheet.autoSizeColumn(i);
-        }
+        autoSize(sheet, headers.length);
     }
 
     private static void exportarPagos(Workbook workbook) throws Exception {
         Sheet sheet = workbook.createSheet("Pagos");
-
-        Row headerRow = sheet.createRow(0);
         String[] headers = {"ID", "Paciente", "Tipo Pago", "Monto", "Forma de Pago", "Fecha", "Notas"};
-
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font font = workbook.createFont();
-            font.setBold(true);
-            headerStyle.setFont(font);
-            cell.setCellStyle(headerStyle);
-        }
+        writeHeaderRow(workbook, sheet, headers);
 
         List<Pago> pagos = ServiceManager.getPagoDAO().findAll();
-
         int rowNum = 1;
         for (Pago pago : pagos) {
             Row row = sheet.createRow(rowNum++);
-
             row.createCell(0).setCellValue(pago.getId());
             row.createCell(1).setCellValue(pago.getPaciente().getNombre());
             row.createCell(2).setCellValue(pago.getTipoPago().toString());
@@ -192,8 +118,25 @@ public class ExcelBackupManager {
             row.createCell(5).setCellValue(pago.getFecha().toString());
             row.createCell(6).setCellValue(pago.getNotas() != null ? pago.getNotas() : "");
         }
+        autoSize(sheet, headers.length);
+    }
+
+    private static void writeHeaderRow(Workbook workbook, Sheet sheet, String[] headers) {
+        Row headerRow = sheet.createRow(0);
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setBold(true);
+        headerStyle.setFont(font);
 
         for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+    }
+
+    private static void autoSize(Sheet sheet, int columnCount) {
+        for (int i = 0; i < columnCount; i++) {
             sheet.autoSizeColumn(i);
         }
     }

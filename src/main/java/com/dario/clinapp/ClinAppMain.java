@@ -21,6 +21,12 @@ public class ClinAppMain extends Application
         primaryStage.show();
     }
 
+    @Override
+    public void stop() {
+        ServiceManager.shutdown();
+    }
+
+
     public static void main( String[] args )
     {
 launch(args);
