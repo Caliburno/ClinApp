@@ -130,12 +130,13 @@ public class PacientesController {
                 return;
             }
 
-            double deuda = 0;
+            double precio = Double.parseDouble(txtValorSesion.getText());
+            double deuda;
+
             if (cmbTipoPaciente.getValue() == TipoPaciente.DIAGNOSTICO) {
-                // For diagnosis patients, debt is the total diagnosis price
-                deuda = Double.parseDouble(txtValorSesion.getText());
+                deuda = precio;
+                precio = 0;
             } else {
-                // For other patients, use the debt field value
                 deuda = Double.parseDouble(txtDeuda.getText());
             }
 
@@ -144,7 +145,7 @@ public class PacientesController {
                     txtNombre.getText().trim(),
                     cmbTipoPaciente.getValue(),
                     cmbTipoSesion.getValue(),
-                    Double.parseDouble(txtValorSesion.getText()),
+                    precio,
                     deuda,
                     txtNotas.getText().trim()
             );
@@ -177,9 +178,13 @@ public class PacientesController {
             pacienteSeleccionado.setNombre(txtNombre.getText().trim());
             pacienteSeleccionado.setTipoPaciente(cmbTipoPaciente.getValue());
             pacienteSeleccionado.setTipoSesion(cmbTipoSesion.getValue());
-            pacienteSeleccionado.setPrecioPorSesion(Double.parseDouble(txtValorSesion.getText()));
 
-            if (cmbTipoPaciente.getValue() != TipoPaciente.DIAGNOSTICO) {
+            if (cmbTipoPaciente.getValue() == TipoPaciente.DIAGNOSTICO) {
+                double precioDiagnostico = Double.parseDouble(txtValorSesion.getText());
+                pacienteSeleccionado.setPrecioPorSesion(0);
+                pacienteSeleccionado.setDeuda(precioDiagnostico);
+            } else {
+                pacienteSeleccionado.setPrecioPorSesion(Double.parseDouble(txtValorSesion.getText()));
                 pacienteSeleccionado.setDeuda(Double.parseDouble(txtDeuda.getText()));
             }
 
