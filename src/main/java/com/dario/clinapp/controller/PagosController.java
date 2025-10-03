@@ -17,7 +17,6 @@ import java.util.List;
 
 public class PagosController {
 
-    // Controles del formulario
     @FXML private ComboBox<Paciente> cmbPaciente;
     @FXML private ComboBox<TipoPago> cmbTipoPago;
     @FXML private ComboBox<FormaDePago> cmbFormaPago;
@@ -25,13 +24,11 @@ public class PagosController {
     @FXML private DatePicker dateFecha;
     @FXML private TextField txtNotas;
 
-    // Botones
     @FXML private Button btnAgregar;
     @FXML private Button btnEditar;
     @FXML private Button btnEliminar;
     @FXML private Button btnLimpiar;
 
-    // Tabla y columnas
     @FXML private TableView<Pago> tablaPagos;
     @FXML private TableColumn<Pago, String> colPaciente;
     @FXML private TableColumn<Pago, TipoPago> colTipoPago;
@@ -40,7 +37,9 @@ public class PagosController {
     @FXML private TableColumn<Pago, LocalDate> colFecha;
     @FXML private TableColumn<Pago, String> colNotas;
 
-    // Variables de clase
+    @FXML private ComboBox<String> cmbMesFiltro;
+    @FXML private ComboBox<Integer> cmbAnioFiltro;
+
     private ObservableList<Pago> listaPagos = FXCollections.observableArrayList();
     private ObservableList<Paciente> listaPacientes = FXCollections.observableArrayList();
     private Pago pagoSeleccionado = null;
@@ -51,20 +50,35 @@ public class PagosController {
         cargarPacientes();
         cargarPagos();
         configurarSeleccionTabla();
+        configurarFiltros();
 
-        // Configurar fecha por defecto
         dateFecha.setValue(LocalDate.now());
 
-        // Configurar botones inicialmente
         btnEditar.setDisable(true);
         btnEliminar.setDisable(true);
 
-        // Listener para mostrar deuda del paciente seleccionado
         cmbPaciente.setOnAction(e -> mostrarDeudaPaciente());
     }
 
+    private void configurarFiltros() {
+        ObservableList<String> meses = FXCollections.observableArrayList(
+                "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        );
+        cmbMesFiltro.setItems(meses);
+
+        ObservableList<Integer> anios = FXCollections.observableArrayList();
+        int anioActual = LocalDate.now().getYear();
+        for (int i = anioActual - 4; i <= anioActual; i++) {
+            anios.add(i);
+        }
+        cmbAnioFiltro.setItems(anios);
+
+        cmbMesFiltro.setValue(meses.get(LocalDate.now().getMonthValue() - 1));
+        cmbAnioFiltro.setValue(anioActual);
+    }
+
     private void configurarTabla() {
-        // Configurar las columnas
         colPaciente.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleStringProperty(cellData.getValue().getPaciente().getNombre()));
 
@@ -78,17 +92,13 @@ public class PagosController {
     }
 
     private void configurarComboBoxes() {
-        // Configurar ComboBox de Tipos de Pago
         cmbTipoPago.setItems(FXCollections.observableArrayList(TipoPago.values()));
 
-        // Configurar ComboBox de Formas de Pago
         cmbFormaPago.setItems(FXCollections.observableArrayList(FormaDePago.values()));
         cmbFormaPago.setValue(FormaDePago.TRANSFERENCIA);
 
-        // Configurar ComboBox de Pacientes
         cmbPaciente.setItems(listaPacientes);
 
-        // Converter para mostrar solo el nombre del paciente en el ComboBox
         cmbPaciente.setConverter(new StringConverter<Paciente>() {
             @Override
             public String toString(Paciente paciente) {
@@ -150,13 +160,10 @@ public class PagosController {
 
             actualizarEstadoInformes(paciente);
 
-            // Actualizar deuda del paciente (restarle lo que pagó)
             actualizarDeudaPaciente(paciente, -montoPago);
 
-            mostrarMensaje("Pago registrado exitosamente", Alert.AlertType.INFORMATION);
-
             cargarPagos();
-            cargarPacientes(); // Recargar para mostrar deuda actualizada
+            cargarPacientes();
             limpiarFormulario();
 
         } catch (NumberFormatException e) {
@@ -168,12 +175,11 @@ public class PagosController {
 
     private void marcarSesionesComoPagas(Paciente paciente, double montoPago) {
         try {
-            // Obtener sesiones pendientes del paciente
             List<Sesion> sesionesPendientes = ServiceManager.getSesionDAO()
                     .findByPacienteId(paciente.getId())
                     .stream()
                     .filter(s -> s.getEstadoPagoSesion() == EstadoPagoSesion.PENDIENTE)
-                    .sorted((s1, s2) -> s1.getFecha().compareTo(s2.getFecha())) // Más antiguas primero
+                    .sorted((s1, s2) -> s1.getFecha().compareTo(s2.getFecha()))
                     .collect(Collectors.toList());
 
             double montoRestante = montoPago;
@@ -181,7 +187,6 @@ public class PagosController {
 
             for (Sesion sesion : sesionesPendientes) {
                 if (montoRestante >= precioPorSesion) {
-                    // Marcar sesión como paga
                     sesion.setEstadoPagoSesion(EstadoPagoSesion.PAGA);
                     ServiceManager.getSesionDAO().update(sesion);
                     montoRestante -= precioPorSesion;
@@ -197,26 +202,21 @@ public class PagosController {
 
     private void actualizarEstadoInformes(Paciente paciente) {
         try {
-            // Get PaymentAllocationService
             PaymentAllocationService paymentService = new PaymentAllocationService(
                     ServiceManager.getSesionDAO(),
                     ServiceManager.getPagoDAO(),
                     ServiceManager.getInformeDAO()
             );
 
-            // Get all informes for this patient
             List<Informe> informes = ServiceManager.getInformeDAO().findByPacienteId(paciente.getId());
 
             for (Informe informe : informes) {
-                // Recalculate entregado (or "saldado" as you renamed it)
                 double entregadoActualizado = paymentService.calcularSaldadoInforme(paciente, informe.getId());
                 double saldoActualizado = informe.getPrecio() - entregadoActualizado;
 
-                // Update the informe
                 informe.setSaldado(entregadoActualizado);
                 informe.setSaldo(saldoActualizado);
 
-                // Update payment status
                 if (saldoActualizado <= 0) {
                     informe.setEstadoPagoInforme(EstadoPagoInforme.PAGADO);
                 } else if (entregadoActualizado > 0) {
@@ -225,7 +225,6 @@ public class PagosController {
                     informe.setEstadoPagoInforme(EstadoPagoInforme.PENDIENTE);
                 }
 
-                // Save to database
                 ServiceManager.getInformeDAO().update(informe);
             }
 
@@ -246,10 +245,8 @@ public class PagosController {
                 return;
             }
 
-            // Revertir el pago anterior (sumar lo que se había restado)
             actualizarDeudaPaciente(pagoSeleccionado.getPaciente(), pagoSeleccionado.getMonto());
 
-            // Aplicar el nuevo pago
             pagoSeleccionado.setPaciente(cmbPaciente.getValue());
             pagoSeleccionado.setTipoPago(cmbTipoPago.getValue());
             pagoSeleccionado.setMonto(Double.parseDouble(txtMonto.getText()));
@@ -259,7 +256,6 @@ public class PagosController {
 
             ServiceManager.getPagoDAO().update(pagoSeleccionado);
 
-            // Actualizar deuda con el nuevo monto
             actualizarDeudaPaciente(cmbPaciente.getValue(), -Double.parseDouble(txtMonto.getText()));
 
             mostrarMensaje("Pago actualizado exitosamente", Alert.AlertType.INFORMATION);
@@ -289,7 +285,6 @@ public class PagosController {
 
         if (confirmacion.showAndWait().get() == ButtonType.OK) {
             try {
-                // Revertir el pago (sumar lo que se había restado a la deuda)
                 actualizarDeudaPaciente(pagoSeleccionado.getPaciente(), pagoSeleccionado.getMonto());
 
                 ServiceManager.getPagoDAO().delete(pagoSeleccionado.getId());
@@ -330,6 +325,7 @@ public class PagosController {
         }
     }
 
+    @FXML
     private void cargarPagos() {
         try {
             var pagos = ServiceManager.getPagoDAO().findAll();
@@ -339,6 +335,27 @@ public class PagosController {
             mostrarMensaje("Error al cargar pagos: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
+    @FXML
+    private void cargarPago() {
+        if (cmbMesFiltro.getValue() == null || cmbAnioFiltro.getValue() == null) {
+            return;
+        }
+
+        try {
+            int mes = cmbMesFiltro.getSelectionModel().getSelectedIndex() + 1;
+            int anio = cmbAnioFiltro.getValue();
+
+            LocalDate desde = LocalDate.of(anio, mes, 1);
+            LocalDate hasta = desde.withDayOfMonth(desde.lengthOfMonth());
+
+            var pagos = ServiceManager.getPagoDAO().findByRangoFechas(desde, hasta);
+            listaPagos.clear();
+            listaPagos.addAll(pagos);
+        } catch (Exception e) {
+            mostrarMensaje("Error al filtrar sesiones: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
 
     private void cargarPagoEnFormulario(Pago pago) {
         pagoSeleccionado = pago;
@@ -363,7 +380,6 @@ public class PagosController {
     private void mostrarDeudaPaciente() {
         if (cmbPaciente.getValue() != null) {
             Paciente paciente = cmbPaciente.getValue();
-            // Ya se muestra en el converter del ComboBox
             System.out.println("Paciente seleccionado: " + paciente.getNombre() + " - Deuda: $" + paciente.getDeuda());
         }
     }

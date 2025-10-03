@@ -34,8 +34,6 @@ public class SesionesController {
 
     @FXML private ComboBox<String> cmbMesFiltro;
     @FXML private ComboBox<Integer> cmbAnioFiltro;
-    @FXML private Button btnFiltrar;
-    @FXML private Button btnMostrarTodo;
 
     private ObservableList<Sesion> listaSesiones = FXCollections.observableArrayList();
     private ObservableList<Paciente> listaPacientes = FXCollections.observableArrayList();
@@ -142,7 +140,7 @@ public class SesionesController {
                     EstadoPagoSesion.PAGA : EstadoPagoSesion.PENDIENTE;
 
             Sesion nuevaSesion = new Sesion(
-                    null, // ID null para nueva sesión
+                    null,
                     cmbTipoSesion.getValue(),
                     cmbPaciente.getValue(),
                     dateFecha.getValue(),

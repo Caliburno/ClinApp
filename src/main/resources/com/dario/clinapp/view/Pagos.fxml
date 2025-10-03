@@ -16,6 +16,15 @@
     <children>
         <VBox>
             <children>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Mes:" />
+                    <ComboBox fx:id="cmbMesFiltro" prefWidth="120" />
+
+                    <Label text="Año:" />
+                    <ComboBox fx:id="cmbAnioFiltro" prefWidth="100" />
+
+                    <Button fx:id="btnFiltrar" text="Filtrar" onAction="#cargarPago" />
+                </HBox>
                 <HBox alignment="TOP_CENTER" spacing="15.0">
                     <children>
                         <VBox>

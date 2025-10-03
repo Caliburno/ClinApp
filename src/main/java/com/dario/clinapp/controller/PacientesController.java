@@ -153,7 +153,6 @@ public class PacientesController {
             );
 
             ServiceManager.getPacienteDAO().save(nuevo);
-            mostrarMensaje("Paciente creado exitosamente", Alert.AlertType.INFORMATION);
 
             cargarPacientes();
             limpiarFormulario();

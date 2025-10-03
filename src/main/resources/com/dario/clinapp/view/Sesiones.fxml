@@ -10,7 +10,7 @@
     <children>
         <VBox alignment="TOP_CENTER">
             <children>
-                <!-- Sección de filtros - agregar antes de la tabla -->
+
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <Label text="Mes:" />
                     <ComboBox fx:id="cmbMesFiltro" prefWidth="120" />
