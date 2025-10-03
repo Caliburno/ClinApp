@@ -13,20 +13,17 @@ import java.time.LocalDate;
 
 public class SesionesController {
 
-    // Controles del formulario
     @FXML private ComboBox<Paciente> cmbPaciente;
     @FXML private DatePicker dateFecha;
     @FXML private ComboBox<TipoSesion> cmbTipoSesion;
     @FXML private CheckBox chkPaga;
     @FXML private TextField txtNotas;
 
-    // Botones
     @FXML private Button btnAgregar;
     @FXML private Button btnEditar;
     @FXML private Button btnEliminar;
     @FXML private Button btnLimpiar;
 
-    // Tabla y columnas
     @FXML private TableView<Sesion> tablaSesiones;
     @FXML private TableColumn<Sesion, String> colPaciente;
     @FXML private TableColumn<Sesion, LocalDate> colFecha;
@@ -35,7 +32,11 @@ public class SesionesController {
     @FXML private TableColumn<Sesion, EstadoPagoSesion> colPaga;
     @FXML private TableColumn<Sesion, String> colNotas;
 
-    // Variables de clase
+    @FXML private ComboBox<String> cmbMesFiltro;
+    @FXML private ComboBox<Integer> cmbAnioFiltro;
+    @FXML private Button btnFiltrar;
+    @FXML private Button btnMostrarTodo;
+
     private ObservableList<Sesion> listaSesiones = FXCollections.observableArrayList();
     private ObservableList<Paciente> listaPacientes = FXCollections.observableArrayList();
     private Sesion sesionSeleccionada = null;
@@ -46,33 +47,28 @@ public class SesionesController {
         cargarPacientes();
         cargarSesiones();
         configurarSeleccionTabla();
+        configurarFiltros();
 
-        // Configurar fecha por defecto
         dateFecha.setValue(LocalDate.now());
 
-        // Configurar botones inicialmente
         btnEditar.setDisable(true);
         btnEliminar.setDisable(true);
 
-        // Listener for when a patient is selected in the ComboBox
         cmbPaciente.setOnAction(e -> {
             Paciente pacienteSeleccionado = cmbPaciente.getValue();
             if (pacienteSeleccionado != null) {
-                // Autopopulate the session type based on patient's default
                 cmbTipoSesion.setValue(pacienteSeleccionado.getTipoSesion());
             }
         });
     }
 
     private void configurarTabla() {
-        // Configurar las columnas
         colPaciente.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleStringProperty(cellData.getValue().getPaciente().getNombre()));
 
         colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
         colTipoSesion.setCellValueFactory(new PropertyValueFactory<>("tipoSesion"));
 
-        // Para el precio, mostramos el precio del paciente
         colPrecio.setCellValueFactory(cellData ->
                 new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().getPaciente().getPrecioPorSesion()));
 
@@ -82,14 +78,29 @@ public class SesionesController {
         tablaSesiones.setItems(listaSesiones);
     }
 
+    private void configurarFiltros() {
+        ObservableList<String> meses = FXCollections.observableArrayList(
+                "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        );
+        cmbMesFiltro.setItems(meses);
+
+        ObservableList<Integer> anios = FXCollections.observableArrayList();
+        int anioActual = LocalDate.now().getYear();
+        for (int i = anioActual - 4; i <= anioActual; i++) {
+            anios.add(i);
+        }
+        cmbAnioFiltro.setItems(anios);
+
+        cmbMesFiltro.setValue(meses.get(LocalDate.now().getMonthValue() - 1));
+        cmbAnioFiltro.setValue(anioActual);
+    }
+
     private void configurarComboBoxes() {
-        // Configurar ComboBox de Tipo de Sesión
         cmbTipoSesion.setItems(FXCollections.observableArrayList(TipoSesion.values()));
 
-        // Configurar ComboBox de Pacientes
         cmbPaciente.setItems(listaPacientes);
 
-        // Converter para mostrar solo el nombre del paciente en el ComboBox
         cmbPaciente.setConverter(new StringConverter<Paciente>() {
             @Override
             public String toString(Paciente paciente) {
@@ -145,8 +156,6 @@ public class SesionesController {
                 double montoSesion = cmbPaciente.getValue().getPrecioPorSesion();
                 actualizarDeudaPaciente(cmbPaciente.getValue(), montoSesion);
             }
-
-            mostrarMensaje("Sesión registrada exitosamente", Alert.AlertType.INFORMATION);
 
             cargarSesiones();
             cargarPacientes();
@@ -228,7 +237,7 @@ public class SesionesController {
         if (confirmacion.showAndWait().get() == ButtonType.OK) {
             try {
                 ServiceManager.getSesionDAO().delete(sesionSeleccionada.getId());
-                mostrarMensaje("Sesión eliminada exitosamente", Alert.AlertType.INFORMATION);
+
                 cargarSesiones();
                 limpiarFormulario();
             } catch (Exception e) {
@@ -261,15 +270,27 @@ public class SesionesController {
         }
     }
 
+    @FXML
     private void cargarSesiones() {
+        if (cmbMesFiltro.getValue() == null || cmbAnioFiltro.getValue() == null) {
+            return;
+        }
+
         try {
-            var sesiones = ServiceManager.getSesionDAO().findAll();
+            int mes = cmbMesFiltro.getSelectionModel().getSelectedIndex() + 1;
+            int anio = cmbAnioFiltro.getValue();
+
+            LocalDate desde = LocalDate.of(anio, mes, 1);
+            LocalDate hasta = desde.withDayOfMonth(desde.lengthOfMonth());
+
+            var sesiones = ServiceManager.getSesionDAO().findByRangoFechas(desde, hasta);
             listaSesiones.clear();
             listaSesiones.addAll(sesiones);
         } catch (Exception e) {
-            mostrarMensaje("Error al cargar sesiones: " + e.getMessage(), Alert.AlertType.ERROR);
+            mostrarMensaje("Error al filtrar sesiones: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
+
 
     private void cargarSesionEnFormulario(Sesion sesion) {
         sesionSeleccionada = sesion;

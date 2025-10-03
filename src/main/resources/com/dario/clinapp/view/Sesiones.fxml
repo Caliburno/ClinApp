@@ -10,6 +10,16 @@
     <children>
         <VBox alignment="TOP_CENTER">
             <children>
+                <!-- Sección de filtros - agregar antes de la tabla -->
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Mes:" />
+                    <ComboBox fx:id="cmbMesFiltro" prefWidth="120" />
+
+                    <Label text="Año:" />
+                    <ComboBox fx:id="cmbAnioFiltro" prefWidth="100" />
+
+                    <Button fx:id="btnFiltrar" text="Filtrar" onAction="#cargarSesiones" />
+                </HBox>
                 <HBox alignment="TOP_CENTER" prefHeight="100.0" prefWidth="600.0" spacing="10.0">
                     <children>
                         <VBox spacing="5.0">

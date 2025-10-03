@@ -17,6 +17,8 @@ public class PacientesController {
     @FXML private TextField txtDeuda;
     @FXML private TextField txtNotas;
 
+    @FXML private CheckBox chkEditarDeuda;
+
     @FXML private Button btnAgregar;
     @FXML private Button btnEditar;
     @FXML private Button btnBorrar;
@@ -42,26 +44,27 @@ public class PacientesController {
         btnEditar.setDisable(true);
         btnBorrar.setDisable(true);
 
-        // Set default values
         txtDeuda.setText("0");
-        txtDeuda.setDisable(true); // Disabled by default
+        txtDeuda.setDisable(true);
+
+        chkEditarDeuda.setOnAction(e -> {
+            txtDeuda.setDisable(!chkEditarDeuda.isSelected());
+        });
     }
 
     private void configurarListeners() {
-        // Listener for TipoPaciente changes
         cmbTipoPaciente.setOnAction(e -> {
             TipoPaciente tipoPaciente = cmbTipoPaciente.getValue();
             if (tipoPaciente != null) {
                 if (tipoPaciente == TipoPaciente.DIAGNOSTICO) {
-                    // Set TipoSesion to DIAGNOSTICO and disable
                     cmbTipoSesion.setValue(TipoSesion.DIAGNOSTICO);
                     cmbTipoSesion.setDisable(true);
                     txtValorSesion.setPromptText("Precio Total Diagnóstico");
-                    txtDeuda.setDisable(true);
-                    // Update debt field to show diagnosis price
+                    if (!chkEditarDeuda.isSelected()) {
+                        txtDeuda.setDisable(true);
+                    }
                     actualizarDeudaDiagnostico();
                 } else {
-                    // Enable TipoSesion and set default to ESTANDAR
                     cmbTipoSesion.setDisable(false);
                     if (cmbTipoSesion.getValue() == null) {
                         cmbTipoSesion.setValue(TipoSesion.ESTANDAR);
@@ -72,7 +75,6 @@ public class PacientesController {
             }
         });
 
-        // Listener for price changes when Diagnostico is selected
         txtValorSesion.textProperty().addListener((obs, oldVal, newVal) -> {
             if (cmbTipoPaciente.getValue() == TipoPaciente.DIAGNOSTICO) {
                 actualizarDeudaDiagnostico();
@@ -240,6 +242,8 @@ public class PacientesController {
 
         tablaPacientes.getSelectionModel().clearSelection();
         pacienteSeleccionado = null;
+        txtDeuda.setDisable(true);
+        chkEditarDeuda.setSelected(false);
         btnEditar.setDisable(true);
         btnBorrar.setDisable(true);
     }
@@ -263,7 +267,6 @@ public class PacientesController {
         txtDeuda.setText(String.valueOf(paciente.getDeuda()));
         txtNotas.setText(paciente.getNotas());
 
-        // Handle Diagnostico patients when editing
         if (paciente.getTipoPaciente() == TipoPaciente.DIAGNOSTICO) {
             cmbTipoSesion.setDisable(true);
             txtDeuda.setDisable(true);
