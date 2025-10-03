@@ -179,19 +179,33 @@ public class SesionesController {
                 return;
             }
 
-            EstadoPagoSesion estadoPago = chkPaga.isSelected() ?
+            EstadoPagoSesion estadoOriginal = sesionSeleccionada.getEstadoPagoSesion();
+
+            EstadoPagoSesion estadoNuevo = chkPaga.isSelected() ?
                     EstadoPagoSesion.PAGA : EstadoPagoSesion.PENDIENTE;
+
+            if (estadoOriginal != estadoNuevo) {
+                double precioSesion = cmbPaciente.getValue().getPrecioPorSesion();
+
+                if (estadoOriginal == EstadoPagoSesion.PENDIENTE && estadoNuevo == EstadoPagoSesion.PAGA) {
+                    actualizarDeudaPaciente(cmbPaciente.getValue(), -precioSesion);
+                }
+                else if (estadoOriginal == EstadoPagoSesion.PAGA && estadoNuevo == EstadoPagoSesion.PENDIENTE) {
+                    actualizarDeudaPaciente(cmbPaciente.getValue(), precioSesion);
+                }
+            }
 
             sesionSeleccionada.setTipoSesion(cmbTipoSesion.getValue());
             sesionSeleccionada.setPaciente(cmbPaciente.getValue());
             sesionSeleccionada.setFecha(dateFecha.getValue());
-            sesionSeleccionada.setEstadoPagoSesion(estadoPago);
+            sesionSeleccionada.setEstadoPagoSesion(estadoNuevo);
             sesionSeleccionada.setNotas(txtNotas.getText().trim());
 
             ServiceManager.getSesionDAO().update(sesionSeleccionada);
             mostrarMensaje("Sesión actualizada exitosamente", Alert.AlertType.INFORMATION);
 
             cargarSesiones();
+            cargarPacientes();
             limpiarFormulario();
 
         } catch (Exception e) {
