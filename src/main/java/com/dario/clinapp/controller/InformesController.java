@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
+import javafx.collections.transformation.FilteredList;
 
 public class InformesController {
 
@@ -40,9 +41,9 @@ public class InformesController {
     private ObservableList<Paciente> listaPacientes = FXCollections.observableArrayList();
     private Informe informeSeleccionado = null;
     private PaymentAllocationService paymentAllocationService;
+    private FilteredList<Paciente> pacientesFiltrados;
 
     public void initialize() {
-        // Initialize payment allocation service
         paymentAllocationService = new PaymentAllocationService(
                 ServiceManager.getSesionDAO(),
                 ServiceManager.getPagoDAO(),
@@ -54,40 +55,25 @@ public class InformesController {
         cargarDatos();
         configurarSeleccionTabla();
         configurarListeners();
-
-        cmbPaciente.setConverter(new StringConverter<Paciente>() {
-            @Override
-            public String toString(Paciente paciente) {
-                return paciente != null ? paciente.getNombre() : "";
-            }
-
-            @Override
-            public Paciente fromString(String string) {
-                return null; // Not needed for display purposes
-            }
-        });
+        configurarBusquedaPaciente(); // NUEVO
 
         btnEditar.setDisable(true);
         btnBorrar.setDisable(true);
 
-        // Saldado field starts disabled
         txtSaldado.setDisable(true);
         txtSaldo.setDisable(true); // Saldo is always calculated
         cmbEstadoPagoInforme.setDisable(true); // Estado pago is auto-calculated
     }
 
     private void configurarListeners() {
-        // Listener for patient selection
         cmbPaciente.setOnAction(e -> {
             Paciente paciente = cmbPaciente.getValue();
             if (paciente != null) {
                 if (paciente.getTipoPaciente() == TipoPaciente.DIAGNOSTICO) {
-                    // Auto-populate for diagnosis patients
                     cmbTipoInforme.setValue(TipoInforme.PSICODIAGNOSTICO);
                     txtPrecio.setText(String.valueOf(paciente.getPrecioPorSesion()));
                     calcularSaldadoYSaldo();
                 } else {
-                    // For other patients, just calculate with current values
                     if (!txtPrecio.getText().isEmpty()) {
                         calcularSaldadoYSaldo();
                     }
@@ -95,26 +81,49 @@ public class InformesController {
             }
         });
 
-        // Listener for precio changes
         txtPrecio.textProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal.trim().isEmpty() && cmbPaciente.getValue() != null) {
                 calcularSaldadoYSaldo();
             }
         });
 
-        // Listener for manual ealdado changes (when enabled)
         txtSaldado.textProperty().addListener((obs, oldVal, newVal) -> {
             if (chkEditarSaldado.isSelected() && !newVal.trim().isEmpty()) {
                 calcularSaldoManual();
             }
         });
 
-        // Listener for edit checkbox
         chkEditarSaldado.selectedProperty().addListener((obs, oldVal, newVal) -> {
             txtSaldado.setDisable(!newVal);
             if (!newVal) {
-                // If unchecked, recalculate automatically
+
                 calcularSaldadoYSaldo();
+            }
+        });
+    }
+
+    private void configurarBusquedaPaciente() {
+        cmbPaciente.setEditable(true);
+
+        cmbPaciente.getEditor().textProperty().addListener((obs, oldValue, newValue) -> {
+            final TextField editor = cmbPaciente.getEditor();
+            final Paciente seleccionado = cmbPaciente.getSelectionModel().getSelectedItem();
+
+            if (seleccionado != null && seleccionado.getNombre().equals(newValue)) {
+                return;
+            }
+
+            pacientesFiltrados.setPredicate(paciente -> {
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+
+                String filtro = newValue.toLowerCase();
+                return paciente.getNombre().toLowerCase().contains(filtro);
+            });
+
+            if (!pacientesFiltrados.isEmpty() && !cmbPaciente.isShowing()) {
+                cmbPaciente.show();
             }
         });
     }
@@ -128,16 +137,13 @@ public class InformesController {
             double precio = Double.parseDouble(txtPrecio.getText());
             Paciente paciente = cmbPaciente.getValue();
 
-            // Calculate saldado based on payment allocation
             double saldado = paymentAllocationService.calcularSaldadoNuevoInforme(paciente, precio);
 
             txtSaldado.setText(String.format("%.2f", saldado));
 
-            // Calculate saldo
             double saldo = precio - saldado;
             txtSaldo.setText(String.format("%.2f", saldo));
 
-            // Auto-set payment status
             actualizarEstadoPago(saldado, saldo);
 
         } catch (NumberFormatException e) {
@@ -188,8 +194,25 @@ public class InformesController {
         cmbEstadoInforme.setItems(FXCollections.observableArrayList(EstadoInforme.values()));
         cmbEstadoPagoInforme.setItems(FXCollections.observableArrayList(EstadoPagoInforme.values()));
 
-        // Set default estado informe
         cmbEstadoInforme.setValue(EstadoInforme.SIN_HACER);
+
+        pacientesFiltrados = new FilteredList<>(listaPacientes, p -> true);
+        cmbPaciente.setItems(pacientesFiltrados);
+
+        cmbPaciente.setConverter(new StringConverter<Paciente>() {
+            @Override
+            public String toString(Paciente paciente) {
+                return paciente != null ? paciente.getNombre() : "";
+            }
+
+            @Override
+            public Paciente fromString(String string) {
+                return listaPacientes.stream()
+                        .filter(p -> p.getNombre().equals(string))
+                        .findFirst()
+                        .orElse(null);
+            }
+        });
     }
 
     private void configurarSeleccionTabla() {
@@ -231,7 +254,6 @@ public class InformesController {
 
             ServiceManager.getInformeDAO().save(nuevo);
 
-            // Update patient debt
             Paciente paciente = cmbPaciente.getValue();
             double nuevaDeuda = paciente.getDeuda() + saldo;
             ServiceManager.getPacienteDAO().updateDeuda(paciente.getId(), nuevaDeuda);
@@ -275,7 +297,6 @@ public class InformesController {
 
             ServiceManager.getInformeDAO().update(informeSeleccionado);
 
-            // Update patient debt if saldo changed
             double diferenciaSaldo = informeSeleccionado.getSaldo() - saldoAnterior;
             if (diferenciaSaldo != 0) {
                 Paciente paciente = cmbPaciente.getValue();
@@ -309,7 +330,6 @@ public class InformesController {
 
         if (confirmacion.showAndWait().get() == ButtonType.OK) {
             try {
-                // Subtract saldo from patient debt
                 Paciente paciente = informeSeleccionado.getPaciente();
                 double nuevaDeuda = paciente.getDeuda() - informeSeleccionado.getSaldo();
                 ServiceManager.getPacienteDAO().updateDeuda(paciente.getId(), nuevaDeuda);
@@ -327,6 +347,7 @@ public class InformesController {
     @FXML
     private void limpiarFormulario() {
         cmbPaciente.setValue(null);
+        cmbPaciente.getEditor().setText(""); // NUEVO: Limpiar el texto del editor
         cmbTipoInforme.setValue(null);
         txtPrecio.clear();
         txtSaldado.clear();
@@ -353,7 +374,6 @@ public class InformesController {
             var pacientes = ServiceManager.getPacienteDAO().findAll();
             listaPacientes.clear();
             listaPacientes.addAll(pacientes);
-            cmbPaciente.setItems(listaPacientes);
         } catch (Exception e) {
             mostrarMensaje("Error al cargar pacientes: " + e.getMessage(), Alert.AlertType.ERROR);
         }

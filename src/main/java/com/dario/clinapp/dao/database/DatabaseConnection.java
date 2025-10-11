@@ -37,8 +37,6 @@ public class DatabaseConnection {
         }
     }
 
-    // Agregar este método a DatabaseConnection:
-
     public void closeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {

@@ -23,7 +23,7 @@
                     <Label text="Año:" />
                     <ComboBox fx:id="cmbAnioFiltro" prefWidth="100" />
 
-                    <Button fx:id="btnFiltrar" text="Filtrar" onAction="#cargarPago" />
+                    <Button fx:id="btnFiltrar" text="Filtrar" onAction="#filtrarPagos" />
                 </HBox>
                 <HBox alignment="TOP_CENTER" spacing="15.0">
                     <children>

@@ -94,8 +94,8 @@
                     <columns>
                         <TableColumn fx:id="colNombre" prefWidth="130.0" text="Nombre" />
                         <TableColumn fx:id="colFrecuencia" prefWidth="130.0" text="Tipo de Paciente" />
-                        <TableColumn fx:id="colTipoSesion" prefWidth="130.0" text="Tipo de Sesion" />
-                        <TableColumn fx:id="colValorSesion" prefWidth="130.0" text="Valor Tratamiento" />
+                        <TableColumn fx:id="colTipoSesion" prefWidth="130.0" text="Tipo de Sesión" />
+                        <TableColumn fx:id="colValorSesion" prefWidth="130.0" text="Valor Sesión" />
                         <TableColumn fx:id="colDeuda" prefWidth="100.0" text="Deuda" />
                         <TableColumn fx:id="colNotas" prefWidth="100.0" text="Notas" />
                     </columns>

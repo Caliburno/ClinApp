@@ -9,11 +9,10 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
 import java.util.List;
-
+import javafx.collections.transformation.FilteredList;
 import java.time.LocalDate;
 import java.util.stream.Collectors;
 import com.dario.clinapp.service.PaymentAllocationService;
-import java.util.List;
 
 public class PagosController {
 
@@ -43,14 +42,15 @@ public class PagosController {
     private ObservableList<Pago> listaPagos = FXCollections.observableArrayList();
     private ObservableList<Paciente> listaPacientes = FXCollections.observableArrayList();
     private Pago pagoSeleccionado = null;
+    private FilteredList<Paciente> pacientesFiltrados;
 
     public void initialize() {
         configurarTabla();
         configurarComboBoxes();
         cargarPacientes();
-        cargarPagos();
         configurarSeleccionTabla();
         configurarFiltros();
+        configurarBusquedaPaciente();
 
         dateFecha.setValue(LocalDate.now());
 
@@ -58,6 +58,8 @@ public class PagosController {
         btnEliminar.setDisable(true);
 
         cmbPaciente.setOnAction(e -> mostrarDeudaPaciente());
+
+       filtrarPagos();
     }
 
     private void configurarFiltros() {
@@ -97,7 +99,8 @@ public class PagosController {
         cmbFormaPago.setItems(FXCollections.observableArrayList(FormaDePago.values()));
         cmbFormaPago.setValue(FormaDePago.TRANSFERENCIA);
 
-        cmbPaciente.setItems(listaPacientes);
+        pacientesFiltrados = new FilteredList<>(listaPacientes, p -> true);
+        cmbPaciente.setItems(pacientesFiltrados);
 
         cmbPaciente.setConverter(new StringConverter<Paciente>() {
             @Override
@@ -114,6 +117,43 @@ public class PagosController {
                         .filter(p -> string.startsWith(p.getNombre()))
                         .findFirst()
                         .orElse(null);
+            }
+        });
+    }
+
+    private void configurarBusquedaPaciente() {
+        cmbPaciente.setEditable(true);
+
+        cmbPaciente.getEditor().textProperty().addListener((obs, oldValue, newValue) -> {
+            final TextField editor = cmbPaciente.getEditor();
+            final Paciente seleccionado = cmbPaciente.getSelectionModel().getSelectedItem();
+
+            // Si hay un paciente seleccionado y el texto coincide, no filtrar
+            if (seleccionado != null && seleccionado.getNombre().equals(newValue)) {
+                return;
+            }
+
+            // Filtrar la lista
+            pacientesFiltrados.setPredicate(paciente -> {
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+
+                String filtro = newValue.toLowerCase();
+                return paciente.getNombre().toLowerCase().contains(filtro);
+            });
+
+            // Si hay resultados y el ComboBox no está abierto, abrirlo
+            if (!pacientesFiltrados.isEmpty() && !cmbPaciente.isShowing()) {
+                cmbPaciente.show();
+            }
+        });
+
+        // Cuando se selecciona un paciente del dropdown, actualizar el texto
+        cmbPaciente.setOnAction(e -> {
+            Paciente seleccionado = cmbPaciente.getSelectionModel().getSelectedItem();
+            if (seleccionado != null) {
+                cmbPaciente.getEditor().setText(seleccionado.getNombre());
             }
         });
     }
@@ -336,7 +376,7 @@ public class PagosController {
         }
     }
     @FXML
-    private void cargarPago() {
+    private void filtrarPagos() {
         if (cmbMesFiltro.getValue() == null || cmbAnioFiltro.getValue() == null) {
             return;
         }

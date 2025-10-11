@@ -136,7 +136,12 @@ public class PacientesController {
             double deuda;
 
             if (cmbTipoPaciente.getValue() == TipoPaciente.DIAGNOSTICO) {
-                deuda = precio;
+                // FIX: Only auto-set deuda if checkbox is NOT selected
+                if (chkEditarDeuda.isSelected()) {
+                    deuda = Double.parseDouble(txtDeuda.getText());
+                } else {
+                    deuda = precio;
+                }
                 precio = 0;
             } else {
                 deuda = Double.parseDouble(txtDeuda.getText());
@@ -183,7 +188,13 @@ public class PacientesController {
             if (cmbTipoPaciente.getValue() == TipoPaciente.DIAGNOSTICO) {
                 double precioDiagnostico = Double.parseDouble(txtValorSesion.getText());
                 pacienteSeleccionado.setPrecioPorSesion(0);
-                pacienteSeleccionado.setDeuda(precioDiagnostico);
+
+                // FIX: Only auto-set deuda if checkbox is NOT selected
+                if (chkEditarDeuda.isSelected()) {
+                    pacienteSeleccionado.setDeuda(Double.parseDouble(txtDeuda.getText()));
+                } else {
+                    pacienteSeleccionado.setDeuda(precioDiagnostico);
+                }
             } else {
                 pacienteSeleccionado.setPrecioPorSesion(Double.parseDouble(txtValorSesion.getText()));
                 pacienteSeleccionado.setDeuda(Double.parseDouble(txtDeuda.getText()));

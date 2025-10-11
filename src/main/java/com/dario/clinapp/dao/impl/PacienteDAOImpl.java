@@ -10,7 +10,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-// En dao/impl/PacienteDAOImpl.java
 public class PacienteDAOImpl implements PacienteDAO {
 
     @Override
@@ -32,7 +31,6 @@ public class PacienteDAOImpl implements PacienteDAO {
 
             stmt.executeUpdate();
 
-            // Obtener el ID generado automáticamente
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 if (rs.next()) {
                     paciente.setId(rs.getLong(1));

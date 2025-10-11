@@ -8,7 +8,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-// En dao/impl/InformeDAOImpl.java
 public class InformeDAOImpl implements InformeDAO {
 
     @Override
@@ -72,7 +71,7 @@ public class InformeDAOImpl implements InformeDAO {
     }
 
     private Informe mapResultSetToInforme(ResultSet rs) throws SQLException {
-        // Primero construimos el paciente
+
         Paciente paciente = new Paciente(
                 rs.getLong("paciente_id"),
                 rs.getString("nombre"),
@@ -83,7 +82,6 @@ public class InformeDAOImpl implements InformeDAO {
                 rs.getString("paciente_notas")
         );
 
-        // Después construimos el informe
         return new Informe(
                 rs.getLong("id"),
                 paciente,
@@ -228,8 +226,6 @@ public class InformeDAOImpl implements InformeDAO {
 
         return informes;
     }
-
-    // Agregar estos métodos a InformeDAOImpl:
 
     @Override
     public List<Informe> findByTipoInforme(TipoInforme tipo) {

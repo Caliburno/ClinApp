@@ -14,18 +14,12 @@ public class BackupManager {
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
 
-    /**
-     * Creates a full backup (SQLite + Excel) inside a timestamped folder.
-     * @return path to the created backup folder
-     */
     public static Path createCompleteBackup() {
         try {
-            // Create folder backups/clinapp_backup_yyyy-MM-dd_HH-mm-ss
             String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT);
             Path backupDir = Paths.get(BACKUP_FOLDER, "clinapp_backup_" + timestamp);
             Files.createDirectories(backupDir);
 
-            // Copy SQLite database into zip
             Path dbZip = backupDir.resolve("clinapp.db.zip");
             try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(dbZip))) {
                 Path dbPath = Paths.get(DATABASE_FILE);
@@ -38,7 +32,6 @@ public class BackupManager {
                 zipOut.closeEntry();
             }
 
-            // Export Excel into same folder
             Path excelFile = ExcelBackupManager.exportarTodasLasTablas(backupDir);
 
             System.out.println("Backup completo creado en: " + backupDir);
@@ -59,7 +52,6 @@ public class BackupManager {
             DatabaseConnection.getInstance().closeConnection();
             Path currentDb = Paths.get(DATABASE_FILE);
 
-            // Keep a .bak of the current DB
             if (Files.exists(currentDb)) {
                 Files.copy(currentDb, Paths.get(DATABASE_FILE + ".bak"),
                         StandardCopyOption.REPLACE_EXISTING);

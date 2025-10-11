@@ -8,7 +8,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.StringConverter;
-
+import javafx.collections.transformation.FilteredList;
 import java.time.LocalDate;
 
 public class SesionesController {
@@ -38,14 +38,15 @@ public class SesionesController {
     private ObservableList<Sesion> listaSesiones = FXCollections.observableArrayList();
     private ObservableList<Paciente> listaPacientes = FXCollections.observableArrayList();
     private Sesion sesionSeleccionada = null;
+    private FilteredList<Paciente> pacientesFiltrados;
 
     public void initialize() {
         configurarTabla();
         configurarComboBoxes();
         cargarPacientes();
-        cargarSesiones();
         configurarSeleccionTabla();
         configurarFiltros();
+        configurarBusquedaPaciente();
 
         dateFecha.setValue(LocalDate.now());
 
@@ -58,7 +59,10 @@ public class SesionesController {
                 cmbTipoSesion.setValue(pacienteSeleccionado.getTipoSesion());
             }
         });
+
+        cargarSesiones();
     }
+
 
     private void configurarTabla() {
         colPaciente.setCellValueFactory(cellData ->
@@ -97,7 +101,8 @@ public class SesionesController {
     private void configurarComboBoxes() {
         cmbTipoSesion.setItems(FXCollections.observableArrayList(TipoSesion.values()));
 
-        cmbPaciente.setItems(listaPacientes);
+        pacientesFiltrados = new FilteredList<>(listaPacientes, p -> true);
+        cmbPaciente.setItems(pacientesFiltrados);
 
         cmbPaciente.setConverter(new StringConverter<Paciente>() {
             @Override
@@ -111,6 +116,44 @@ public class SesionesController {
                         .filter(p -> p.getNombre().equals(string))
                         .findFirst()
                         .orElse(null);
+            }
+        });
+    }
+
+    private void configurarBusquedaPaciente() {
+        cmbPaciente.setEditable(true);
+
+        cmbPaciente.getEditor().textProperty().addListener((obs, oldValue, newValue) -> {
+            final TextField editor = cmbPaciente.getEditor();
+            final Paciente seleccionado = cmbPaciente.getSelectionModel().getSelectedItem();
+
+            // Si hay un paciente seleccionado y el texto coincide, no filtrar
+            if (seleccionado != null && seleccionado.getNombre().equals(newValue)) {
+                return;
+            }
+
+            // Filtrar la lista
+            pacientesFiltrados.setPredicate(paciente -> {
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+
+                String filtro = newValue.toLowerCase();
+                return paciente.getNombre().toLowerCase().contains(filtro);
+            });
+
+            // Si hay resultados y el ComboBox no está abierto, abrirlo
+            if (!pacientesFiltrados.isEmpty() && !cmbPaciente.isShowing()) {
+                cmbPaciente.show();
+            }
+        });
+
+        // Cuando se selecciona un paciente del dropdown, actualizar el texto
+        cmbPaciente.setOnAction(e -> {
+            Paciente seleccionado = cmbPaciente.getSelectionModel().getSelectedItem();
+            if (seleccionado != null) {
+                cmbPaciente.getEditor().setText(seleccionado.getNombre());
+                cmbTipoSesion.setValue(seleccionado.getTipoSesion());
             }
         });
     }
@@ -247,6 +290,7 @@ public class SesionesController {
     @FXML
     private void limpiarFormulario() {
         cmbPaciente.setValue(null);
+        cmbPaciente.getEditor().setText("");
         dateFecha.setValue(LocalDate.now());
         cmbTipoSesion.setValue(null);
         chkPaga.setSelected(false);

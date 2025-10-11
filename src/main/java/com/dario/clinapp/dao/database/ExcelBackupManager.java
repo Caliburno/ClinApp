@@ -13,11 +13,6 @@ import java.util.List;
 
 public class ExcelBackupManager {
 
-    /**
-     * Exports all tables to a single Excel file in the given target folder.
-     * @param targetFolder the folder where the Excel will be saved
-     * @return path to the created Excel file
-     */
     public static Path exportarTodasLasTablas(Path targetFolder) {
         try (Workbook workbook = new XSSFWorkbook()) {
 
