@@ -63,11 +63,11 @@ Personal project developed to streamline administrative tasks for a private psyc
 In production use. Currently runs via Maven due to deployment complexities. A Python rewrite (ContabilidadClinica) is in development with additional features.
    
    ## Screenshots
+![PatientRegistry](https://github.com/user-attachments/assets/14e4a3e0-88ff-4426-954c-7674723e7d53)
 ![Sessions](https://github.com/user-attachments/assets/ee1d9c4b-41dd-4a34-9cf7-ed9d9ad3fb26)
 ![Payments](https://github.com/user-attachments/assets/174fd613-70ad-41eb-ba24-38c95d088692)
 ![MedicalReports](https://github.com/user-attachments/assets/0782682e-2686-4959-835f-f51e09f8d010)
 ![Accounting](https://github.com/user-attachments/assets/5e8cc024-b16c-4b40-8ef3-97681480afe4)
-![PatientRegistry](https://github.com/user-attachments/assets/14e4a3e0-88ff-4426-954c-7674723e7d53)
   
    # About deployment
 
