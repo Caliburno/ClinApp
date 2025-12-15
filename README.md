@@ -1,17 +1,66 @@
-# Clinic Financial Manager
-   
-   Desktop application for managing a psychologist clinic finances built with JavaFX.
-   
-   ## Features
-   - Patient registry: Add patient profiles to keep track of each individualy. Specify type of patient, type of session and amount charged.
-   - Sessions tracking: Add sessions for the patients, clasified by type of session. Can be set as "paid" so it's not contabilized towards patient debt.
-   - Medical reports: Add and keep track of medical reports for patients. Set status of payment(partial, total, etc.) set status of report(tests needed, finished, delivered, etc.)
-   - Payments: Add payments for the patients profiles. The payments are authomaticaly deducted from patients debt.
-   - Accounting: Get a view only report of the total amount colected, and broken down by type of patient, and the amount owed. There is also a table showing debt by patient and by type.
-   - Backup saved periodically in .db and .xlsx files simultaneously, leaving a historical registry for auditing. Program creates a new save file on exit.
-   
-   ## Tech Stack
-   Java 21, JavaFX, SQLite, Maven
+# ClinApp
+
+Comprehensive desktop application for managing a psychology clinic's operations, including patient records, session tracking, payments, and accounting.
+
+## About
+
+Personal project developed to streamline administrative tasks for a private psychology practice. Currently in production use since October 2025.
+
+## Features
+
+### Patient Management
+- Register patients with customizable session costs
+- Three patient categories: regular, monthly payment, and diagnosis
+- Track patient debt automatically
+- Add session notes and relevant information
+
+### Session Tracking
+- Quick session registration with auto-populated costs
+- Multiple session types: regular, couples, family, trauma, diagnosis
+- Payment status tracking (pending/paid)
+- Monthly view with filtering by month and year
+- Smart patient search with type-ahead filtering
+
+### Medical Reports
+- Generate and track various documentation types
+- Report categories: letters, diagnoses, proof of treatment, institutional communications
+- Progress tracking: missing tests, pending, finished, delivered
+- Payment management: advance payments, partial payments, full payment
+- Cost tracking per report
+
+### Payment Processing
+- Record payments by date and amount
+- Multiple payment methods: cash, bank transfer, etc.
+- Payment concepts: sessions, monthly fees, reports, diagnoses
+- Monthly payment overview with historical filtering
+
+### Accounting
+- Monthly revenue summary broken down by patient type
+- Total outstanding debt tracking
+- Detailed debt breakdown by patient
+- Shows number of unpaid sessions and pending reports
+
+### Automatic Backups
+- Daily automatic saves
+- Export to both CSV and XLSX formats
+- Historical backup retention
+- Database accessible without application installation
+
+## Tech Stack
+
+- Java
+- JavaFX
+- Maven
+- SQLite
+- IntelliJ IDEA
+
+## Special Features
+
+**Diagnosis Patient Workflow**: Handles fixed-price diagnostic packages where patients pay a single amount covering all sessions, tests, reports, and feedback. Sessions are recorded as $0 since they're included in the package price.
+
+## Status
+
+In production use. Currently runs via Maven due to deployment complexities. A Python rewrite (ContabilidadClinica) is in development with additional features.
    
    ## Screenshots
 ![Sessions](https://github.com/user-attachments/assets/ee1d9c4b-41dd-4a34-9cf7-ed9d9ad3fb26)
@@ -26,8 +75,6 @@ This application is currently deployed as a development build using Maven.
 
 **Current setup:** Runs directly from source using a batch script
 **In use:** Active production use in a medical clinic since October 2025
-
-Future improvements: Package as standalone executable with jlink/jpackage.
 
 ### Running from source
 ```bash
